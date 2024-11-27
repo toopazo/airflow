@@ -1,0 +1,10 @@
+services:
+  # database:
+  #   image: postgres
+  logic:
+    image: python
+  model:
+    image: python
+    
+  # redis:
+  #   image: "redis:alpine"

@@ -1,0 +1,18 @@
+fastapi
+pandas
+pillow
+numpy
+pipreqs
+zmq
+PyYAML
+
+# AI
+transformers
+torch
+torchvision
+tensorflow
+albumentations 
+opencv-python
+
+# Huggingface
+datasets[vision]
