@@ -1,18 +1,24 @@
+# General purpose
 fastapi
 pandas
 pillow
+opencv-python
 numpy
 pipreqs
 zmq
 PyYAML
-
-# AI
-transformers
-torch
-torchvision
-tensorflow
-albumentations 
-opencv-python
+scikit-learn
 
 # Huggingface
 datasets[vision]
+transformers
+accelerate
+evaluate
+
+# torch
+torch
+torchvision
+
+# AI
+albumentations 
+pytesseract
