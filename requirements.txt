@@ -8,6 +8,10 @@ pipreqs
 zmq
 PyYAML
 scikit-learn
+python-dotenv
+
+# Database
+psycopg2-binary
 
 # Huggingface
 datasets[vision]
