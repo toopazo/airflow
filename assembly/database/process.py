@@ -258,8 +258,9 @@ class ProcessData:
 
 if __name__ == "__main__":
     do = ProcessData()
+    u_user = os.getlogin()
     do.process_video_data(
         Path(
-            "/home/toopazo/repos_git/airflow/insightface/output/inauguracion_metro_santiago/dataframe.csv"
+            f"/home/{u_user}/repos_git/airflow/insightface/output/inauguracion_metro_santiago/dataframe.csv"
         )
     )
