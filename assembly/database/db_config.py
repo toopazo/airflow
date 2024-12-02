@@ -45,3 +45,17 @@ def connect_to_database(config):
     except psycopg2.Error as err:
         logging.error("Error connecting: %s", err)
         return None
+
+
+def connect_and_execute(service_fnct, service_arg):
+    conn = connect_to_database(db_airflow)
+    id_list = []
+    if conn:
+        try:
+            id_list = service_fnct(conn, service_arg)
+        except Exception as e:
+            print(f"Error interacting with {db_airflow['database']}: {e}")
+        conn.close()
+    else:
+        print(f"No connection to {db_airflow['database']}.")
+    return id_list

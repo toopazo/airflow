@@ -1,13 +1,18 @@
 import os
-from pathlib import Path
-import numpy as np
 import re
-from tqdm import tqdm
 from ast import literal_eval
 import json
+from pathlib import Path
+
+import numpy as np
+from tqdm import tqdm
 import pandas as pd
 
-from assembly.database.db_config import connect_to_database, db_airflow
+from assembly.database.db_config import (
+    connect_to_database,
+    db_airflow,
+    connect_and_execute,
+)
 from assembly.database.db_services import (
     insert_data_video,
     find_id_video,
@@ -22,16 +27,25 @@ class ProcessData:
     def __init__(self):
         pass
 
-    def process_video_data(self, df_path):
+    def add_video_data_to_database(self, video_path: Path, data_dir: Path):
+        assert data_dir.is_dir()
+        assert video_path.is_file()
+
+        df_path = data_dir / "dataframe.csv"
+        assert df_path.is_file()
+        imaged_dir = data_dir / "imaged"
+        assert imaged_dir.is_dir()
+        videod_path = data_dir / "imaged.mp4"
+        assert videod_path.is_file()
+
         df = pd.read_csv(df_path, index_col=0)
-        name = df["name"].values[0]
-        user = os.getlogin()
-        path = Path(f"/home/{user}/repos_git/airflow/insightface/videos/{name}.mp4")
-        assert path.is_file()
+        video_name = df["name"].values[0]
+
         # name VARCHAR (255) UNIQUE NOT NULL,
         # path VARCHAR (255) UNIQUE NOT NULL,
-        self.insert_video(row_list=[[str(name), str(path)]])
-        video_id = self.find_video(row_list=[[str(name), str(path)]])
+
+        self.insert_video(row_list=[[str(video_name), str(video_path)]])
+        video_id = self.find_video(row_list=[[str(video_name), str(video_path)]])
         if len(video_id) == 0:
             raise RuntimeError
         video_id = video_id[0]
@@ -68,9 +82,8 @@ class ProcessData:
             ) = self.parse_video_row(row)
 
             counter = int(counter)
-            frame_path = Path(
-                f"/home/{user}/repos_git/airflow/insightface/output/{name}/imaged/imaged_{str(counter).zfill(4)}.png"
-            )
+            frame_path = imaged_dir / f"imaged_{str(counter).zfill(4)}.png"
+
             # print(frame_path)
             assert frame_path.is_file()
             frame_path = str(frame_path)
@@ -259,8 +272,12 @@ class ProcessData:
 if __name__ == "__main__":
     do = ProcessData()
     u_user = os.getlogin()
-    do.process_video_data(
-        Path(
-            f"/home/{u_user}/repos_git/airflow/insightface/output/inauguracion_metro_santiago/dataframe.csv"
-        )
+    u_video_name = "inauguracion_metro_santiago"
+    do.add_video_data_to_database(
+        video_path=Path(
+            f"/home/{u_user}/repos_git/airflow/insightface/videos/{u_video_name}.mp4"
+        ),
+        data_dir=Path(
+            f"/home/{u_user}/repos_git/airflow/insightface/output/{u_video_name}"
+        ),
     )
