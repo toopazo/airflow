@@ -1,3 +1,7 @@
+"""
+Script para definir parametros basicos de la db
+"""
+
 import os
 import logging
 import psycopg2
@@ -47,15 +51,15 @@ def connect_to_database(config):
         return None
 
 
-def connect_and_execute(service_fnct, service_arg):
+def connect_and_execute(service_fnct, row_list):
     conn = connect_to_database(db_airflow)
-    id_list = []
+    res_list = []
     if conn:
         try:
-            id_list = service_fnct(conn, service_arg)
+            res_list = service_fnct(conn, row_list)
         except Exception as e:
             print(f"Error interacting with {db_airflow['database']}: {e}")
         conn.close()
     else:
         print(f"No connection to {db_airflow['database']}.")
-    return id_list
+    return res_list

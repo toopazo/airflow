@@ -26,3 +26,32 @@ torchvision
 # AI
 albumentations 
 pytesseract
+
+########
+# General purpose
+fastapi
+pandas
+pillow
+opencv-python
+numpy
+pipreqs
+zmq
+PyYAML
+scikit-learn
+pyvideoreader
+
+# AI
+albumentations 
+pytesseract
+onnxruntime
+insightface
+
+# Huggingface
+# datasets[vision]
+# transformers
+# accelerate
+# evaluate
+
+# torch
+# torch
+# torchvision

@@ -1,3 +1,7 @@
+"""
+Script para defiir los servicios basicos de la db
+"""
+
 # db_services.py
 import json
 from psycopg2.extras import execute_values

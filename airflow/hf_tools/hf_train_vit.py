@@ -1,3 +1,7 @@
+"""
+Script para probar trainer de HF
+"""
+
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageShow

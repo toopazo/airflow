@@ -1,18 +1,21 @@
-from pathlib import Path
-import numpy as np
-from PIL import Image, ImageShow
+"""
+Script para probar pipeline de HF
+"""
 
-from datasets import load_dataset, get_dataset_split_names
+# from pathlib import Path
+# import numpy as np
+# from PIL import Image, ImageShow
 
-import albumentations
-from torchvision.transforms import (
-    Compose,
-    ColorJitter,
-    ToTensor,
-    RandomRotation,
-    RandomResizedCrop,
-    Normalize,
-)
+# from datasets import load_dataset, get_dataset_split_names
+# import albumentations
+# from torchvision.transforms import (
+#     Compose,
+#     ColorJitter,
+#     ToTensor,
+#     RandomRotation,
+#     RandomResizedCrop,
+#     Normalize,
+# )
 
 # HuggingFace
 from transformers import pipeline

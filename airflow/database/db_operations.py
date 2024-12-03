@@ -3,8 +3,8 @@ from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from tqdm import tqdm
-from assembly.database.db_config import connect_to_database, db_airflow
-from assembly.database.db_services import (
+from airflow.database.db_config import connect_to_database, db_airflow
+from airflow.database.db_services import (
     create_table_video,
     create_table_frame,
     create_table_inference,
