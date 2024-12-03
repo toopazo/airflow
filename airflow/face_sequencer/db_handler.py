@@ -73,9 +73,11 @@ class RowInference:
         print(f"  embedding       shape {self.embedding.shape}")
 
 
-class DbInterface:
+class DbHandler:
     """
     Clase para interactuar con la base de datos
+    handler, broker, dealer, operator,
+    shipper, merchant, trader, trafficker
     """
 
     def __init__(self, video_id: int):
@@ -194,5 +196,5 @@ class DbInterface:
 
 
 if __name__ == "__main__":
-    video1 = DbInterface(1)
-    inferd = video1.get_inferences(frame_i=1, frame_j=150)
+    v1_handler = DbHandler(1)
+    inferd = v1_handler.get_inferences(frame_i=1, frame_j=150)
