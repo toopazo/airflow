@@ -52,6 +52,7 @@ def connect_to_database(config):
 
 
 def connect_and_execute(service_fnct, row_list):
+    print("connect_and_execute ..")
     conn = connect_to_database(db_airflow)
     res_list = []
     if conn:

@@ -39,7 +39,7 @@ class ProcessData:
 
         # print(video_name)
         # print(df)
-        # print(df[df["cnt"] <= 2])
+        # print(df[df["counter"] <= 2])
         # return
 
         # name VARCHAR (255) UNIQUE NOT NULL,
@@ -154,55 +154,72 @@ class ProcessData:
             #     return
 
     def parse_video_row(self, row: dict):
-        counter = int(row["cnt"])
+        counter = int(row["counter"])
         bbox = np.array(
             literal_eval(
-                re.sub(r"\s+", " ", row["bbox"].strip().replace("\n", ""))
-                .replace("[ ", "[")
-                .replace(" ", ",")
+                row["bbox"]
+                # re.sub(r"\s+", " ", row["bbox"].strip().replace("\n", ""))
+                # .replace("[ ", "[")
+                # .replace(" ", ",")
             )
         )
         kps = np.array(
             literal_eval(
-                re.sub(r"\s+", " ", row["kps"].strip().replace("\n", ""))
-                .replace("[ ", "[")
-                .replace(" ", ",")
+                row["kps"]
+                # re.sub(r"\s+", " ", row["kps"].strip().replace("\n", ""))
+                # .replace("[ ", "[")
+                # .replace(" ", ",")
             )
         )
         det_score = float(row["det_score"])
         landmark_3d_68 = np.array(
             literal_eval(
-                re.sub(r"\s+", " ", row["landmark_3d_68"].strip().replace("\n", ""))
-                .replace("[ ", "[")
-                .replace(" ", ",")
+                row["landmark_3d_68"]
+                # re.sub(r"\s+", " ", row["landmark_3d_68"].strip().replace("\n", ""))
+                # .replace("[ ", "[")
+                # .replace(" ", ",")
             )
         )
         pose = np.array(
             literal_eval(
-                re.sub(r"\s+", " ", row["pose"].strip().replace("\n", ""))
-                .replace("[ ", "[")
-                .replace(" ", ",")
+                row["pose"]
+                # re.sub(r"\s+", " ", row["pose"].strip().replace("\n", ""))
+                # .replace("[ ", "[")
+                # .replace(" ", ",")
             )
         )
         landmark_2d_106 = np.array(
             literal_eval(
-                re.sub(r"\s+", " ", row["landmark_2d_106"].strip().replace("\n", ""))
-                .replace("[ ", "[")
-                .replace(" ", ",")
+                row["landmark_2d_106"]
+                # re.sub(r"\s+", " ", row["landmark_2d_106"].strip().replace("\n", ""))
+                # .replace("[ ", "[")
+                # .replace(" ", ",")
             )
         )
         gender = int(row["gender"])
         age = int(row["age"])
         embedding = np.array(
             literal_eval(
-                re.sub(r"\s+", " ", row["embedding"].strip().replace("\n", ""))
-                .replace("[ ", "[")
-                .replace(" ", ",")
+                row["embedding"]
+                # re.sub(r"\s+", " ", row["embedding"].strip().replace("\n", ""))
+                # .replace("[ ", "[")
+                # .replace(" ", ",")
             )
         )
 
         # string = json.dumps(lst)
         # lst = json.loads(string)
+
+        assert isinstance(counter, int)
+        assert isinstance(bbox, np.ndarray)
+        assert isinstance(kps, np.ndarray)
+        assert isinstance(det_score, float)
+        assert isinstance(landmark_3d_68, np.ndarray)
+        assert isinstance(pose, np.ndarray)
+        assert isinstance(landmark_2d_106, np.ndarray)
+        assert isinstance(gender, int)
+        assert isinstance(age, int)
+        assert isinstance(embedding, np.ndarray)
 
         return (
             counter,

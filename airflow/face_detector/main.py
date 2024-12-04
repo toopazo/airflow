@@ -1,9 +1,14 @@
 from pathlib import Path
-from src.video.process import ProcessVideo
+
+from airflow.face_detector.video.process import ProcessVideo
 
 if __name__ == "__main__":
-    videos_dir = Path(__file__).parent / "videos"
-    output_dir = Path(__file__).parent / "output"
+
+    videos_dir = Path("/home/toopazo/repos_git/airflow/videos")
+    output_dir = Path("/home/toopazo/repos_git/airflow/output")
+
+    assert videos_dir.is_dir()
+    assert output_dir.is_dir()
 
     videos = [x for x in videos_dir.iterdir() if x.is_file()]
     for video_path in videos:
