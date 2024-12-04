@@ -5,6 +5,7 @@ Script para pasar de detecciones a secuencias
 import os
 from pathlib import Path
 from copy import deepcopy
+import numpy as np
 
 from airflow.utils.video_handler import VideoHandler
 from airflow.utils.image_painter import ImagePainter
@@ -24,7 +25,7 @@ class SequenceFinder:
 
     def find_sequences(self):
         frame_i = 1
-        frame_j = 3
+        frame_j = 100
         infer_dict = self.vidhan.get_data_inferences(frame_i=frame_i, frame_j=frame_j)
 
         # imgptr = ImagePainter(self.video_id)
@@ -44,9 +45,10 @@ class SequenceFinder:
             infer_list = v["infer_list"]
             frame_id = k
 
-            print(f"There are {len(infer_list)} inferences in frame_id {frame_id}")
+            # print(f"There are {len(infer_list)} inferences in frame_id {frame_id}")
             # print(f"infer_dict[{k}][infer_list] has len {len(infer_list)}")
 
+            new_infer_list = []
             for infer in infer_list:
                 assert isinstance(infer, Inference)
                 gf = GeometryFilter(infer)
@@ -54,10 +56,16 @@ class SequenceFinder:
 
                 infer_id = infer.inference_id
                 if approved:
-                    new_infer_dict[k] = deepcopy(v)
+                    new_infer_list.append(deepcopy(infer))
                     print(f"  inference_id {infer_id} accepted by geometry")
                 else:
                     print(f"  inference_id {infer_id} rejected by geometry")
+
+            new_infer_dict[k] = {"infer_list": new_infer_list}
+
+            print(
+                f"There are {len(infer_list)} inferences in frame_id {frame_id} ({len(new_infer_list)} were accepted)"
+            )
 
         return new_infer_dict
 
@@ -94,22 +102,48 @@ class SequenceFinder:
             print(f"There are {len(infer_list)} inferences in frame_id {frame_id}")
             # print(f"infer_dict[{k}][infer_list] has len {len(infer_list)}")
 
-            left_over = [e.inference_id for e in infer_list]
-            for dynfil in tracking:
+            left_overs = [e.inference_id for e in infer_list]
+            terminated_seqs = []
+            for ix, dynfil in enumerate(tracking):
                 approved = dynfil.apply(infer_list=infer_list)
 
                 if approved:
                     new_infer_dict[k] = deepcopy(v)
-                    print(f"  The sequence {dynfil.sequence} was accepted by dynamics")
-                    left_over.remove(dynfil.sequence[-1])
-                else:
+                    seq_len = len(dynfil.sequence)
                     print(
-                        f"  The sequence {dynfil.sequence} was rejected (interrupted) by dynamics"
+                        f"  The sequence with len {seq_len} was accepted (continued) by dynamics"
                     )
-            print(f"left_over {left_over}")
+                    left_overs.remove(dynfil.sequence[-1])
+                else:
+                    seq_len = len(dynfil.sequence)
+                    print(
+                        f"  The sequence with len {seq_len} was rejected (interrupted) by dynamics"
+                    )
+                    terminated_seqs.append(ix)
+                    # raise RuntimeError
 
-            if len(left_over) > 1:
-                raise RuntimeError
+            # Handle terminated sequences
+            if len(terminated_seqs) > 0:
+                print(f"  Handling terminated_seqs {terminated_seqs} -------->")
+                for rm_ix in terminated_seqs:
+                    rm_infer = tracking.pop(rm_ix)
+                    print(
+                        f"  Removing sequence terminated at inference_id {rm_infer.sequence[-1]}"
+                    )
+
+            # Handle left overs
+            if len(left_overs) > 0:
+                # raise RuntimeError
+                print(f"  Handling left_overs {left_overs} -------->")
+                for left_over_id in left_overs:
+                    for infer in infer_list:
+                        if infer.inference_id == left_over_id:
+                            print(
+                                f"  A new sequence was started from inference_id {left_over_id}"
+                            )
+                            dynfil = DynamicFilter()
+                            dynfil.initialize(infer=infer)
+                            tracking.append(dynfil)
 
         return new_infer_dict
 
