@@ -5,19 +5,25 @@ Script para pasar de detecciones a secuencias
 import os
 from pathlib import Path
 from copy import deepcopy
-import numpy as np
 
 from airflow.utils.video_handler import VideoHandler
 from airflow.utils.image_painter import ImagePainter
 from airflow.database.table_inference import Inference
 from airflow.face_sequencer.filter_geometry import GeometryFilter
-from airflow.face_sequencer.filter_dynamics import DynamicFilter
+from airflow.face_sequencer.filter_dynamics import DynamicFilter, SequenceTracker
 
 
 class SequenceFinder:
     def __init__(self, video_id: int):
         self.video_id = video_id
         self.vidhan = VideoHandler(video_id=video_id)
+        user = os.getlogin()
+        self.output_dir = Path(
+            f"/home/{user}/repos_git/airflow/output/{self.vidhan.video_name}/sequence/"
+        )
+        os.makedirs(self.output_dir, exist_ok=True)
+
+        self.imgptr = ImagePainter(video_id=self.video_id)
 
     # def show_sequence(self):
     #     imgptr = ImagePainter(self.video_id)
@@ -32,13 +38,15 @@ class SequenceFinder:
         # image_list = imgptr.auto_draw_annotations(frame_i=frame_i, frame_j=frame_j)
 
         geom_infer_dict = self.filter_by_geometry(infer_dict=infer_dict)
-        dyn_infer_dict = self.filter_by_dynamics(infer_dict=geom_infer_dict)
+        self.filter_by_dynamics(infer_dict=geom_infer_dict)
 
     def filter_by_geometry(self, infer_dict: dict):
-        # Durante una misma secuencia
-        #   El tamaño de las caras de ser grande
-        #   Las caras deben mirar de frente (kpi con criterio geometrico)
-        #   La distancia entre caras debe ser alta (iou == 0)
+        """
+        Durante una misma secuencia
+          El tamaño de las caras de ser grande
+          Las caras deben mirar de frente (kpi con criterio geometrico)
+          La distancia entre caras debe ser alta (iou == 0)
+        """
 
         new_infer_dict = {}
         for k, v in infer_dict.items():
@@ -69,83 +77,78 @@ class SequenceFinder:
 
         return new_infer_dict
 
-    def filter_by_dynamics(self, infer_dict: dict) -> dict:
-        # Durante una misma secuencia
-        #   La velocidad de cada cara debe ser baja
-        #   La trayectoria de cada cara debe ser identificable de manera simple (las oclusiónes
-        # implican el fin de la secuencia)
+    def filter_by_dynamics(self, infer_dict: dict):
+        """
+        Durante una misma secuencia
+          La velocidad de cada cara debe ser baja
+          La trayectoria de cada cara debe ser identificable de manera simple (las oclusiónes
+          o cercania de otros bbox implican el fin de la secuencia)
 
-        # El resultado de este filtro es un tracking
-        # new_infer_dict = deepcopy(infer_dict)
-        # face_ids = deepcopy(new_infer_dict)
-        # return face_ids
+        El resultado de este filtro es un tracking
+          new_infer_dict = deepcopy(infer_dict)
+          face_ids = deepcopy(new_infer_dict)
+          return face_ids
+        """
 
-        list_of_keys = list(infer_dict.keys())
-        print(f"list_of_keys {list_of_keys}")
+        frame_id_list = list(infer_dict.keys())
+        print(f"frame_id_list {frame_id_list}")
 
-        v = infer_dict[list_of_keys[0]]
+        v = infer_dict[frame_id_list[0]]
         infer_list: list[Inference] = v["infer_list"]
-        tracking: list[DynamicFilter] = []
-        for infer in infer_list:
-            dynfil = DynamicFilter()
-            dynfil.initialize(infer=infer)
-            tracking.append(dynfil)
+        seqtra = SequenceTracker(infer_list)
 
-        list_of_keys.pop(0)
+        frame_id_list.pop(0)
 
-        new_infer_dict = {}
-        for k in list_of_keys:
-            v = infer_dict[k]
+        for frame_id in frame_id_list:
+            v = infer_dict[frame_id]
             infer_list = v["infer_list"]
-            frame_id = k
 
             print(f"There are {len(infer_list)} inferences in frame_id {frame_id}")
             # print(f"infer_dict[{k}][infer_list] has len {len(infer_list)}")
 
-            left_overs = [e.inference_id for e in infer_list]
-            terminated_seqs = []
-            for ix, dynfil in enumerate(tracking):
-                approved = dynfil.apply(infer_list=infer_list)
+            active_seq_list, terminated_seq_list = seqtra.update(infer_list)
 
-                if approved:
-                    new_infer_dict[k] = deepcopy(v)
-                    seq_len = len(dynfil.sequence)
-                    print(
-                        f"  The sequence with len {seq_len} was accepted (continued) by dynamics"
-                    )
-                    left_overs.remove(dynfil.sequence[-1])
-                else:
-                    seq_len = len(dynfil.sequence)
-                    print(
-                        f"  The sequence with len {seq_len} was rejected (interrupted) by dynamics"
-                    )
-                    terminated_seqs.append(ix)
-                    # raise RuntimeError
+            # self.save_active_sequence(frame_id, active_seq_list)
+            # self.save_terminated_sequence(frame_id, terminated_seq_list)
 
-            # Handle terminated sequences
-            if len(terminated_seqs) > 0:
-                print(f"  Handling terminated_seqs {terminated_seqs} -------->")
-                for rm_ix in terminated_seqs:
-                    rm_infer = tracking.pop(rm_ix)
-                    print(
-                        f"  Removing sequence terminated at inference_id {rm_infer.sequence[-1]}"
-                    )
+        # return seqtra.active_seq_list, terminated_seq_list
 
-            # Handle left overs
-            if len(left_overs) > 0:
-                # raise RuntimeError
-                print(f"  Handling left_overs {left_overs} -------->")
-                for left_over_id in left_overs:
-                    for infer in infer_list:
-                        if infer.inference_id == left_over_id:
-                            print(
-                                f"  A new sequence was started from inference_id {left_over_id}"
-                            )
-                            dynfil = DynamicFilter()
-                            dynfil.initialize(infer=infer)
-                            tracking.append(dynfil)
+    def save_active_sequence(self, frame_id: int, active_seq_list: list):
+        for ix, dynfil in enumerate(active_seq_list):
+            assert isinstance(dynfil, DynamicFilter)
 
-        return new_infer_dict
+            seq_frame_id = dynfil.sequence[dynfil.sequence_key_frame_id]
+            seq_bbox = dynfil.sequence[dynfil.sequence_key_bbox]
+
+            frame_id_str = str(frame_id).zfill(6)
+            seq_str = str(ix).zfill(6)
+            seq_path = (
+                self.output_dir / f"frame_id_{frame_id_str}_active_seq_{seq_str}.png"
+            )
+            self.imgptr.draw_crop_list(
+                bbox_list=seq_bbox,
+                frame_id_list=seq_frame_id,
+                image_path=seq_path,
+            )
+
+    def save_terminated_sequence(self, frame_id: int, terminated_seq_list: list):
+        for ix, dynfil in enumerate(terminated_seq_list):
+            assert isinstance(dynfil, DynamicFilter)
+
+            seq_frame_id = dynfil.sequence[dynfil.sequence_key_frame_id]
+            seq_bbox = dynfil.sequence[dynfil.sequence_key_bbox]
+
+            frame_id_str = str(frame_id).zfill(6)
+            seq_str = str(ix).zfill(6)
+            seq_path = (
+                self.output_dir
+                / f"frame_id_{frame_id_str}_terminated_seq_{seq_str}.png"
+            )
+            self.imgptr.draw_crop_list(
+                bbox_list=seq_bbox,
+                frame_id_list=seq_frame_id,
+                image_path=seq_path,
+            )
 
 
 if __name__ == "__main__":

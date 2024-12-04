@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageShow
 from airflow.utils.video_handler import VideoHandler
@@ -27,6 +28,34 @@ class ImagePainter:
     #         assert isinstance(image, Image.Image)
     #         image_list.append(image)
     #     return image_list
+
+    def draw_crop_list(self, bbox_list: list, frame_id_list: list, image_path: Path):
+        crop_list: list[Image.Image] = []
+        for bbox, frame_id in zip(bbox_list, frame_id_list):
+
+            frames_dict = self.video_handler.get_data_frames(
+                frame_i=frame_id, frame_j=frame_id + 1
+            )
+            image = frames_dict[frame_id]["image"]
+            assert isinstance(image, Image.Image)
+
+            left = bbox[0]
+            upper = bbox[1]
+            right = bbox[2]
+            lower = bbox[3]
+            image_crop = image.crop((left, upper, right, lower))
+            crop_list.append(image_crop)
+
+        width, height = crop_list[0].size
+
+        img = Image.new(
+            "RGB", (width * len(crop_list), height), color=(0, 0, 0)
+        )  # set width, height of new image based on original image
+        for i, crop in enumerate(crop_list):
+            img.paste(
+                crop, (i * width, 0)
+            )  # the second argument here is tuple representing upper left corner
+        img.save(image_path)
 
     def auto_draw_annotations(self, frame_i: int, frame_j: int):
         infer_dict = self.video_handler.get_data_inferences(
