@@ -23,7 +23,7 @@ source venv/bin/activate
 
 ## Setting up the database
 
-Next, create the ```.env``` file to startup the database. I followed this excellent tutorial on [how to use the official Postgres' Docker image](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/) to understand the basics of Postgres.
+Next, create the ```.env``` file to startup the database. I followed this excellent tutorial on [how to use the official Postgres' Docker image](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/) to understand the basic variables.
 
 The ```.env``` file should have the following variables
 ```bash
