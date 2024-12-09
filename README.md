@@ -2,10 +2,28 @@
 
 Airflow is a pet project showing my work on **Face Recgnition from video**. This repo hold the code, installation and instructions. The idea behind this project is explained [in this article](https://toopazo.github.io/face-recognition-challenge/) (in Spanish) of [my website](https://toopazo.github.io).
 
-## Installation
+## Getting started
 
-### Database (Postgres)
-I followed this excellent tutorial on [how to use the official Postgres' Docker image](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/)
+## Cloning the repo
+
+```bash
+git clone https://github.com/toopazo/airflow.git
+```
+
+Move into airflow directory and create the virtual environment for Python
+```bash
+cd airflow
+. ./create_venv.sh
+```
+
+This will install all the Python dependencies. If not already activated, manually active the environment using ```bash```.
+```bash
+source venv/bin/activate
+```
+
+## Setting up the database
+
+Next, create the ```.env``` file to startup the database. I followed this excellent tutorial on [how to use the official Postgres' Docker image](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/) to understand the basics of Postgres.
 
 The ```.env``` file should have the following variables
 ```bash
@@ -15,9 +33,43 @@ POSTGRES_DB=airflow
 COMPOSE_EXPOSED_PORT=54322
 ```
 
-## Getting started
+This next step is optional but recommended. Use your favorite app to connect to the database. In my case I used [DBeaver](https://dbeaver.io/). Use the credentials in ```.env``` file to connect using the ```localhost``` as host.
 
-To run the example, first ..
+Next, create the tables.
+```bash
+python -m airflow.database.db_create
+```
+This only needs to be run once. The resulting view in DBeaver (or your preferred app) should be something like this.
+
+![image](docs/dbeaver_airflow.png)
+
+
+## Process the first video
+
+Now it is time to actually populate the database with some videos!
+
+Let us process the videos in ```videos/```. To do this, just execute
+
+```bash
+python -m airflow.face_detector.process_video \
+  videos output
+```
+
+Next, insert the result of a particular video (e.g ```inauguracion_metro_santiago.mp4```) to the database using
+```bash
+python -m airflow.database.insert_video \
+  "videos/inauguracion_metro_santiago.mp4" \
+  "output/inauguracion_metro_santiago"
+```
+
+## Find the face sequences in the processed video
+
+Next, we can move to something interesting. Let us detect the first sequences of detected faces. We can do this running
+```bash
+python -m airflow.face_sequencer.find_sequences 1 output
+```
+The argument ```1``` above refers to the ```video_id``` with value ```1``` in the database (e.g ```1``` -> ```inauguracion_metro_santiago.mp4```). 
+
 
 ## Others
 ### Side project ZDG

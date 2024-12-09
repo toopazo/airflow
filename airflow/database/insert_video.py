@@ -1,5 +1,8 @@
-import os
-import re
+"""
+Script insertar resultados de videos ya procesados hacia la base de datos
+"""
+
+import sys
 from ast import literal_eval
 import json
 from pathlib import Path
@@ -236,10 +239,19 @@ class ProcessData:
 
 
 if __name__ == "__main__":
+
+    u_videos_path = Path(sys.argv[1]).absolute()
+    u_data_dir = Path(sys.argv[2]).absolute()
+
+    print(f"User input videos_path   {u_videos_path}")
+    print(f"User input data_dir      {u_data_dir}")
+
+    assert u_videos_path.is_file()
+    assert u_data_dir.is_dir()
+
     do = ProcessData()
-    u_user = os.getlogin()
-    U_VIDEO_NAME = "inauguracion_metro_santiago"
-    do.add_video_data_to_database(
-        video_path=Path(f"/home/{u_user}/repos_git/airflow/videos/{U_VIDEO_NAME}.mp4"),
-        data_dir=Path(f"/home/{u_user}/repos_git/airflow/output/{U_VIDEO_NAME}"),
-    )
+    do.add_video_data_to_database(video_path=u_videos_path, data_dir=u_data_dir)
+
+    # python -m airflow.database.insert_video \
+    #     "/home/${USER}/repos_git/airflow/videos/inauguracion_metro_santiago.mp4" \
+    #     "/home/${USER}/repos_git/airflow/output/inauguracion_metro_santiago"

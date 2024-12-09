@@ -20,7 +20,7 @@ class VideoHandler:
         self.video_id = video_id
 
         video_row = self.get_data_video()
-        # (1, 'inauguracion_metro_santiago', '/home/toopazo/repos_git/airflow/videos/
+        # (1, 'inauguracion_metro_santiago', '/home/ .. /airflow/videos/
         # inauguracion_metro_santiago.mp4', datetime.datetime(2024, 12, 4, 2, 44, 52, 677154))
         self.video_name = str(video_row[1])
         self.video_path = Path(video_row[2])

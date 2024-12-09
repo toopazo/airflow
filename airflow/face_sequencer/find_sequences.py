@@ -3,6 +3,7 @@ Script para pasar de detecciones a secuencias
 """
 
 import os
+import sys
 from pathlib import Path
 from copy import deepcopy
 
@@ -14,13 +15,10 @@ from airflow.face_sequencer.filter_dynamics import DynamicFilter, SequenceTracke
 
 
 class SequenceFinder:
-    def __init__(self, video_id: int):
+    def __init__(self, video_id: int, output_dir: Path):
         self.video_id = video_id
-        self.vidhan = VideoHandler(video_id=video_id)
-        user = os.getlogin()
-        self.output_dir = Path(
-            f"/home/{user}/repos_git/airflow/output/{self.vidhan.video_name}/sequence/"
-        )
+        self.vid_han = VideoHandler(video_id=video_id)
+        self.output_dir = output_dir / self.vid_han.video_name / "sequence"
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.imgptr = ImagePainter(video_id=self.video_id)
@@ -32,7 +30,7 @@ class SequenceFinder:
     def find_sequences(self):
         frame_i = 1
         frame_j = 100
-        infer_dict = self.vidhan.get_data_inferences(frame_i=frame_i, frame_j=frame_j)
+        infer_dict = self.vid_han.get_data_inferences(frame_i=frame_i, frame_j=frame_j)
 
         # imgptr = ImagePainter(self.video_id)
         # image_list = imgptr.auto_draw_annotations(frame_i=frame_i, frame_j=frame_j)
@@ -152,6 +150,12 @@ class SequenceFinder:
 
 
 if __name__ == "__main__":
-    v1_handler = SequenceFinder(video_id=1)
-    v1_handler.find_sequences()
+    v1_id = int(sys.argv[1])
+    v1_output_dir = Path(sys.argv[2]).absolute()
+    print(f"User input video_id      {v1_id}")
+    print(f"User input output_dir    {v1_output_dir}")
+    v1_seq_fin = SequenceFinder(video_id=1, output_dir=v1_output_dir)
+    v1_seq_fin.find_sequences()
     # v1_handler.show_sequence()
+
+    # python -m airflow.face_sequencer.find_sequences 1 /home/${USER}/repos_git/airflow/output
