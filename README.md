@@ -1,8 +1,28 @@
 # airflow
-A simple container-based arquitecture for AI projects designed to escalate
 
+Airflow is a pet project showing my work on **Face Recgnition from video**. This repo hold the code, installation and instructions. The idea behind this project is explained [in this article](https://toopazo.github.io/face-recognition-challenge/) (in Spanish) of [my website](https://toopazo.github.io).
 
-## Imagen base toopazo/zdg
+## Installation
+
+### Database (Postgres)
+I followed this excellent tutorial on [how to use the official Postgres' Docker image](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/)
+
+The ```.env``` file should have the following variables
+```bash
+POSTGRES_USER=your-db-user
+POSTGRES_PASSWORD=your-db-pass
+POSTGRES_DB=airflow
+COMPOSE_EXPOSED_PORT=54322
+```
+
+## Getting started
+
+To run the example, first ..
+
+## Others
+### Side project ZDG
+
+Imagen base toopazo/zdg
 
 Esta imagen es creada a partir de la excelente libreria ZMQ para intercomunicar los contenedores siguiendo un grafo dirigido.
 
