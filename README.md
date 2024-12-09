@@ -20,7 +20,7 @@ This idea is not entirely new (see [this article](https://toopazo.github.io/face
 
 ## Getting started
 
-## Cloning the repo
+### Cloning the repo
 
 ```bash
 git clone https://github.com/toopazo/airflow.git
@@ -37,7 +37,7 @@ This will install all the Python dependencies. If not already activated, manuall
 source venv/bin/activate
 ```
 
-## Setting up the database
+### Setting up the database
 
 Next, create the ```.env``` file to startup the database. I followed this excellent tutorial on [how to use the official Postgres' Docker image](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/) to understand the basic variables.
 
@@ -60,7 +60,7 @@ This only needs to be run once. The resulting view in DBeaver (or your preferred
 ![image](docs/dbeaver_airflow.png)
 
 
-## Process the first video
+### Process the first video
 
 Now it is time to actually populate the database with some videos!
 
@@ -78,7 +78,7 @@ python -m airflow.database.insert_video \
   "output/inauguracion_metro_santiago"
 ```
 
-## Find the face sequences in the processed video
+### Find the face sequences in the processed video
 
 Next, we can move to something interesting. Let us detect the first sequences of detected faces. We can do this running
 ```bash
