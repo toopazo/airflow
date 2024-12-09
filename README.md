@@ -4,9 +4,13 @@ Airflow is a pet project showing my work on **Face Recognition from video**. Thi
 
 ## What is special about this repo?
 
-There are many similar projects, most of them are paid.
+There are many similar projects, some of them are paid. These are some results after searching for "face recognition from video". 
+- https://www.youtube.com/watch?v=FavHtxgP4l4
+- https://www.corsight.ai/
+- https://www.sentiveillance.com/face-algorithm/
+- https://cloud.google.com/video-intelligence/docs/feature-face-detection
 
-Using AI for face recognition is a very old idea. Now a days there are many implementations, they work great in a controlled environment but tend to do very poorly when put under non-ideal conditions (low resolution, face occlusion, aging, poor illumination, and a long list of other problems). This has limited the usage of this technology. 
+Using AI for face recognition is a very old idea. Now a days there are many implementations, and even companies that recognize faces with reasonable accuracy. They achieve 99% accuracy or more in datasets such as [LFW or CFP-FP](https://paperswithcode.com/sota/face-recognition-on-cfp-fp). The work very well in controlled environments but tend to do poorly when put under non-ideal conditions (low resolution, face occlusion, aging, poor illumination, and a long list of other problems). This has limited the usage of this technology. 
 
 The idea of this repo is to make use of ```face sequences``` strengthen recognition. The comparison between face occurs at the sequence scale and not comparing two images. The idea of cloud-of-points in a 512-vector space requires a little bit more than just the 2-norm or cosine distance between two points. 
 
