@@ -2,19 +2,21 @@
 
 Airflow is a pet project showing my work on **Face Recognition from video**. This repo holds the code, installation and instructions. The idea behind this project is explained [in this article](https://toopazo.github.io/face-recognition-challenge/) (in Spanish) of [my website](https://toopazo.github.io).
 
-## What is special about this repo?
+## What am I trying to do?
 
-There are many similar projects, some of them are paid. These are some results after searching for "face recognition from video". 
+There are many similar projects, some of them are paid other are not. Here are some results after searching for "face recognition from video". 
 - https://www.youtube.com/watch?v=FavHtxgP4l4
 - https://www.corsight.ai/
 - https://www.sentiveillance.com/face-algorithm/
 - https://cloud.google.com/video-intelligence/docs/feature-face-detection
+- https://github.com/prashant-cn/face-recognition-from-webcam-and-video-sources
+- https://github.com/anubhavshrimal/Face-Recognition
 
 Using AI for face recognition is a very old idea. Now a days there are many implementations, and even companies that recognize faces with reasonable accuracy. They achieve 99% accuracy or more in datasets such as [LFW or CFP-FP](https://paperswithcode.com/sota/face-recognition-on-cfp-fp). The work very well in controlled environments but tend to do poorly when put under non-ideal conditions (low resolution, face occlusion, aging, poor illumination, and a long list of other problems). This has limited the usage of this technology. 
 
-The idea of this repo is to make use of ```face sequences``` to strengthen recognition. The comparison between face occurs at the sequence scale and not comparing two images. The idea of cloud-of-points in a 512-vector space requires a little bit more than just the 2-norm or cosine distance between two points. 
+The idea of this repo is to make use of ```face sequences``` to strengthen recognition. The comparison between face occurs at the sequence scale and not comparing two images. The idea of cloud-of-points in a 512-vector space requires a little bit more than just the 2-norm or cosine distance between two points.
 
-This idea is not entirely new (see [this article](https://toopazo.github.io/face-recognition-challenge/) for details). But there are few implementation around. In addition to the sequence-based approach, this implementations also tries to make face recognition at scale. The use of a Postgres extension like [pgvector](https://github.com/pgvector/pgvector) is key to make vector comparison directly on the database. See more details [here](https://www.timescale.com/learn/postgresql-extensions-pgvector)
+This idea is not entirely new (see [this article](https://toopazo.github.io/face-recognition-challenge/) for details). But there are few implementation around. In addition to the sequence-based approach, this implementations also tries to make face recognition at scale. The use of a Postgres extension like [pgvector](https://github.com/pgvector/pgvector) is key to make vector comparison directly on the database. See more details [here](https://www.timescale.com/learn/postgresql-extensions-pgvector). Here I will try to implement things like [Manifold–Manifold Distance](https://ieeexplore.ieee.org/document/6226465) or [Hausdorff distance](https://en.wikipedia.org/wiki/Hausdorff_distance)
 
 ## Getting started
 
