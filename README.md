@@ -74,7 +74,7 @@ Now, the output directory should look like this.
 
 ![image](docs/airflow_output.png)
 
-The ```sequence``` directory holds the sequence of recognized faces at each frame. The example below show frame ```49``` and the face with sequence id ```2```.
+The ```sequence``` directory holds the sequence of recognized faces at each frame. The example below shows frame ```49``` and the face belonging to sequence ```2```.
 
 ![image](docs/frame_id_000049_active_seq_000002.png)
 
