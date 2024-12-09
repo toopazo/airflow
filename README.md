@@ -5,7 +5,6 @@ Airflow is a pet project showing my work on **Face Recognition from video**. Thi
 ## What is special about this repo?
 
 There are many similar projects, most of them are paid.
-- 
 
 Using AI for face recognition is a very old idea. Now a days there are many implementations, they work great in a controlled environment but tend to do very poorly when put under non-ideal conditions (low resolution, face occlusion, aging, poor illumination, and a long list of other problems). This has limited the usage of this technology. 
 
