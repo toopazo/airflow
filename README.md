@@ -70,9 +70,17 @@ python -m airflow.face_sequencer.find_sequences 1 output
 ```
 The argument ```1``` above refers to the ```video_id``` with value ```1``` in the database (e.g ```1``` -> ```inauguracion_metro_santiago.mp4```). 
 
+Now, the output directory should look like this.
 
-## Others
-### Side project ZDG
+![image](docs/airflow_output.png)
+
+The ```sequence``` directory holds the sequence of recognized faces at each frame. The example below show frame ```49``` and the face with sequence id ```2```.
+
+![image](docs/frame_id_000049_active_seq_000002.png)
+
+
+## Docker compose
+### Using ZDG (work in progress)
 
 Imagen base toopazo/zdg
 
