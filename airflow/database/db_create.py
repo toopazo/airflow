@@ -8,6 +8,7 @@ from airflow.database.db_services import (
     create_table_video,
     create_table_frame,
     create_table_inference,
+    create_table_sequence,
 )
 
 
@@ -33,6 +34,11 @@ class DbOps:
             except Exception as e:
                 print(f"Error interacting with {db_airflow['database']}: {e}")
 
+            try:
+                create_table_sequence(conn)
+            except Exception as e:
+                print(f"Error interacting with {db_airflow['database']}: {e}")
+
             conn.close()
         else:
             print(f"No connection to {db_airflow['database']}.")
@@ -41,3 +47,5 @@ class DbOps:
 if __name__ == "__main__":
     do = DbOps()
     do.create_tables()
+
+    # python -m airflow.database.db_create

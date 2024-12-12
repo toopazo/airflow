@@ -7,6 +7,8 @@ Script para representar ls inferencia de una cara
 import json
 import numpy as np
 from copy import deepcopy
+from airflow.database.db_config import connect_and_execute
+from airflow.database.db_services import insert_data_inference, get_data_inference_by_id
 
 
 class Inference:
@@ -27,8 +29,22 @@ class Inference:
         self.age = 0
         self.embedding = 0
 
+    def reset(self):
+        self.inference_id = 0
+        self.frame_id = 0
+        self.bbox = 0
+        self.kps = 0
+        self.det_score = 0
+        self.landmark_3d_68 = 0
+        self.pose = 0
+        self.landmark_2d_106 = 0
+        self.gender = 0
+        self.age = 0
+        self.embedding = 0
+
     def parse_row(self, row: list):
         if len(row) == 11:
+            self.reset()
             for i, e in enumerate(row):
                 # i_str = str(i).rjust(2)
                 if isinstance(e, int) or isinstance(e, float):
@@ -82,3 +98,24 @@ class Inference:
         print(f"  gender          value {self.gender}")
         print(f"  age             value {self.age}")
         print(f"  embedding       shape {self.embedding.shape}")
+
+    def load_from_database(self, inference_id: int):
+        row_name = [inference_id]
+        data_list = connect_and_execute(
+            service_fnct=get_data_inference_by_id,
+            row_list=[row_name],
+        )
+
+        data = data_list[0]
+
+        # print(f"row data {len(data)}")
+        # for row in data:
+        #     print(f"row len {len(row)}")
+        #     print(row)
+        #     self.parse_row(row)
+
+        assert len(data) == 1
+        row = data[0]
+        # print(f"row len {len(row)}")
+        # print(row)
+        self.parse_row(row)

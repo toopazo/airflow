@@ -8,16 +8,12 @@ from copy import deepcopy
 import numpy as np
 from airflow.database.table_inference import Inference
 from airflow.utils.bbox_geometry import BboxGeometry
+from airflow.database.table_sequence import Sequence
 
 
 class DynamicFilter:
     def __init__(self):
         self.verbose = False
-
-        self.sequence = {"frame_id": [], "inference_id": []}
-        self.sequence_key_frame_id = "frame_id"
-        self.sequence_key_inference_id = "inference_id"
-        self.sequence_key_bbox = "bbox"
 
         self.previous_bbox = np.array([])
 
@@ -25,15 +21,7 @@ class DynamicFilter:
         self.max_iou_overlap = 0.1
         self.bbox_geometry = BboxGeometry()
 
-    def initialize(self, infer: Inference):
-        self.sequence = {
-            self.sequence_key_frame_id: [infer.frame_id],
-            self.sequence_key_inference_id: [infer.inference_id],
-            self.sequence_key_bbox: [infer.bbox],
-        }
-        self.previous_bbox = deepcopy(infer.bbox)
-
-    def apply(self, infer_list: list[Inference]):
+    def apply(self, infer_list: list[Inference]) -> tuple:
         x1, y1, x2, y2 = self.previous_bbox
         assert x1 < x2
         assert y1 < y2
@@ -65,17 +53,17 @@ class DynamicFilter:
         current_infer = deepcopy(infer_list[arg_min_dist])
 
         if self.verbose:
-            cur_infid = current_infer.inference_id
+            current_inferid = current_infer.inference_id
             current_iou = self.bbox_geometry.get_iou(
                 current_infer.bbox, self.previous_bbox
             )
-            print(f"  inference_id {cur_infid}: iou {current_iou}")
-            print(f"  inference_id {cur_infid}: displacement {displacement}")
+            print(f"  inference_id {current_inferid}: iou {current_iou}")
+            print(f"  inference_id {current_inferid}: displacement {displacement}")
             print(
-                f"  inference_id {cur_infid}: max_displacement_px {self.max_displacement_px}"
+                f"  inference_id {current_inferid}: max_displacement_px {self.max_displacement_px}"
             )
         if displacement > self.max_displacement_px:
-            return False
+            return current_infer, False
 
         # Check iou for occlusion and/or confusion risks with the rest of candidates
         infer_list.pop(arg_min_dist)
@@ -89,33 +77,41 @@ class DynamicFilter:
                     f"  inference_id {infer_id}: max_iou_overlap {self.max_iou_overlap}"
                 )
             if iou > self.max_iou_overlap:
-                return False
+                return current_infer, False
 
-        self.sequence[self.sequence_key_frame_id].append(current_infer.frame_id)
-        self.sequence[self.sequence_key_inference_id].append(current_infer.inference_id)
-        self.sequence[self.sequence_key_bbox].append(current_infer.bbox)
         self.previous_bbox = current_infer.bbox
 
-        return True
+        return current_infer, True
 
 
 class SequenceTracker:
     def __init__(self, infer_list: list[Inference]):
-        self.active_seq_list: list[DynamicFilter] = []
+        self.active_filter_list: list[DynamicFilter] = []
+        self.active_sequence_list: list[Sequence] = []
         for infer in infer_list:
-            dynfil = DynamicFilter()
-            dynfil.initialize(infer=infer)
-            self.active_seq_list.append(dynfil)
+            dyn_fil = DynamicFilter()
+            dyn_fil.previous_bbox = deepcopy(infer.bbox)
+            self.active_filter_list.append(dyn_fil)
+
+            sequence = Sequence()
+            sequence.initialize(infer=infer, sequence_id=0)
+            self.active_sequence_list.append(sequence)
+
+    def print_info(self):
+        print(f"Active sequence list has {len(self.active_filter_list)} elements")
 
     def update(self, infer_list: list[Inference]) -> tuple:
         left_overs = [e.inference_id for e in infer_list]
         terminated_seq_ix = []
         terminated_seq_list = []
-        for ix, dynfil in enumerate(self.active_seq_list):
-            approved = dynfil.apply(infer_list=infer_list)
+        for ix, dyn_fil in enumerate(self.active_filter_list):
+            filtered_infer, approved = dyn_fil.apply(infer_list=infer_list)
 
-            seq_inference_id = dynfil.sequence[dynfil.sequence_key_inference_id]
+            sequence = self.active_sequence_list[ix]
+            seq_inference_id = sequence.get_inference_id_list()
             if approved:
+                sequence.append_inference(filtered_infer, sequence_id=0)
+
                 seq_len = f"{len(seq_inference_id)}".rjust(6)
                 print(
                     f"  Sequence {ix} with len {seq_len} was accepted (continued)  by dynamics"
@@ -127,15 +123,16 @@ class SequenceTracker:
                     f"  Sequence {ix} with len {seq_len} was rejected (terminated) by dynamics"
                 )
                 terminated_seq_ix.append(ix)
-                terminated_seq_list.append(deepcopy(dynfil))
+                terminated_seq_list.append(deepcopy(sequence))
                 # raise RuntimeError
 
         # Handle terminated sequences
         if len(terminated_seq_ix) > 0:
             print(f"  ----> Handling terminated sequences {terminated_seq_ix}")
             for rm_ix in terminated_seq_ix:
-                rm_infer = self.active_seq_list.pop(rm_ix)
-                rm_seq_inference_id = rm_infer.sequence[rm_infer.sequence_key_frame_id]
+                _ = self.active_filter_list.pop(rm_ix)
+                rm_sequence = self.active_sequence_list.pop(rm_ix)
+                rm_seq_inference_id = rm_sequence.get_inference_id_list()
                 print(
                     f"  ----> Removing sequence terminated at inference_id {rm_seq_inference_id[-1]}"
                 )
@@ -150,8 +147,12 @@ class SequenceTracker:
                         print(
                             f"  ----> A new sequence was started from inference_id {left_over_id}"
                         )
-                        dynfil = DynamicFilter()
-                        dynfil.initialize(infer=infer)
-                        self.active_seq_list.append(dynfil)
+                        dyn_fil = DynamicFilter()
+                        dyn_fil.previous_bbox = deepcopy(infer.bbox)
+                        self.active_filter_list.append(dyn_fil)
 
-        return self.active_seq_list, terminated_seq_list
+                        sequence = Sequence()
+                        sequence.initialize(infer=infer, sequence_id=0)
+                        self.active_sequence_list.append(sequence)
+
+        return self.active_sequence_list, terminated_seq_list

@@ -14,11 +14,11 @@ import pandas as pd
 from airflow.database.db_config import connect_and_execute
 from airflow.database.db_services import (
     insert_data_video,
-    find_id_video,
+    get_id_video_by_row,
     insert_data_frame,
-    find_id_frame,
+    get_id_frame_by_row,
     insert_data_inference,
-    find_id_inference,
+    get_id_inference_by_row,
 )
 
 
@@ -53,7 +53,7 @@ class ProcessData:
             row_list=[[str(video_name), str(video_path)]],
         )
         video_id = connect_and_execute(
-            service_fnct=find_id_video,
+            service_fnct=get_id_video_by_row,
             row_list=[[str(video_name), str(video_path)]],
         )
         if len(video_id) == 0:
@@ -91,7 +91,7 @@ class ProcessData:
 
             # frame_id = self.find_frame(row_list=[[video_id, counter, frame_path]])
             frame_id = connect_and_execute(
-                service_fnct=find_id_frame,
+                service_fnct=get_id_frame_by_row,
                 row_list=[[video_id, counter, frame_path]],
             )
             if len(frame_id) == 0:
@@ -105,7 +105,7 @@ class ProcessData:
                 )
                 # frame_id = self.find_frame(row_list=[[video_id, counter, frame_path]])
                 frame_id = connect_and_execute(
-                    service_fnct=find_id_frame,
+                    service_fnct=get_id_frame_by_row,
                     row_list=[[video_id, counter, frame_path]],
                 )
                 if len(frame_id) == 0:
@@ -145,7 +145,7 @@ class ProcessData:
             )
             # inference_id = self.find_inference(row_list=[row_inference])
             inference_id = connect_and_execute(
-                service_fnct=find_id_inference,
+                service_fnct=get_id_inference_by_row,
                 row_list=[row_inference],
             )
             if len(inference_id) == 0:

@@ -11,7 +11,8 @@ from airflow.utils.video_handler import VideoHandler
 from airflow.utils.image_painter import ImagePainter
 from airflow.database.table_inference import Inference
 from airflow.face_sequencer.filter_geometry import GeometryFilter
-from airflow.face_sequencer.filter_dynamics import DynamicFilter, SequenceTracker
+from airflow.face_sequencer.filter_dynamics import SequenceTracker
+from airflow.database.table_sequence import Sequence
 
 
 class SequenceFinder:
@@ -21,7 +22,7 @@ class SequenceFinder:
         self.output_dir = output_dir / self.vid_han.video_name / "sequence"
         os.makedirs(self.output_dir, exist_ok=True)
 
-        self.imgptr = ImagePainter(video_id=self.video_id)
+        self.img_ptr = ImagePainter(video_id=self.video_id)
 
     # def show_sequence(self):
     #     imgptr = ImagePainter(self.video_id)
@@ -36,13 +37,13 @@ class SequenceFinder:
         # image_list = imgptr.auto_draw_annotations(frame_i=frame_i, frame_j=frame_j)
 
         geom_infer_dict = self.filter_by_geometry(infer_dict=infer_dict)
-        self.filter_by_dynamics(infer_dict=geom_infer_dict)
+        self.filter_by_dynamics(infer_dict=geom_infer_dict, save=False)
 
     def filter_by_geometry(self, infer_dict: dict):
         """
         Durante una misma secuencia
           El tamaño de las caras de ser grande
-          Las caras deben mirar de frente (kpi con criterio geometrico)
+          Las caras deben mirar de frente (kpi con criterio geométrico)
           La distancia entre caras debe ser alta (iou == 0)
         """
 
@@ -75,12 +76,12 @@ class SequenceFinder:
 
         return new_infer_dict
 
-    def filter_by_dynamics(self, infer_dict: dict):
+    def filter_by_dynamics(self, infer_dict: dict, save: bool):
         """
         Durante una misma secuencia
           La velocidad de cada cara debe ser baja
-          La trayectoria de cada cara debe ser identificable de manera simple (las oclusiónes
-          o cercania de otros bbox implican el fin de la secuencia)
+          La trayectoria de cada cara debe ser identificable de manera simple (la oclusión
+          o cercanía de otros bbox implican el fin de la secuencia)
 
         El resultado de este filtro es un tracking
           new_infer_dict = deepcopy(infer_dict)
@@ -93,7 +94,7 @@ class SequenceFinder:
 
         v = infer_dict[frame_id_list[0]]
         infer_list: list[Inference] = v["infer_list"]
-        seqtra = SequenceTracker(infer_list)
+        seq_track = SequenceTracker(infer_list)
 
         frame_id_list.pop(0)
 
@@ -104,37 +105,60 @@ class SequenceFinder:
             print(f"There are {len(infer_list)} inferences in frame_id {frame_id}")
             # print(f"infer_dict[{k}][infer_list] has len {len(infer_list)}")
 
-            active_seq_list, terminated_seq_list = seqtra.update(infer_list)
+            active_seq_list, terminated_seq_list = seq_track.update(infer_list)
 
-            # self.save_active_sequence(frame_id, active_seq_list)
-            # self.save_terminated_sequence(frame_id, terminated_seq_list)
+            if save:
+                self._save_active_sequence(frame_id, active_seq_list)
+                self._save_terminated_sequence(frame_id, terminated_seq_list)
 
-        # return seqtra.active_seq_list, terminated_seq_list
+            # if frame_id == 49:
+            #     for ix, sequence in enumerate(active_seq_list):
+            #         assert isinstance(sequence, Sequence)
+            #         frame_id_str = str(frame_id).zfill(6)
+            #         seq_str = str(ix).zfill(6)
+            #         seq_name = f"frame_id_{frame_id_str}_active_seq_{seq_str}"
+            #         sequence.insert_into_database(sequence_name=seq_name)
 
-    def save_active_sequence(self, frame_id: int, active_seq_list: list):
-        for ix, dynfil in enumerate(active_seq_list):
-            assert isinstance(dynfil, DynamicFilter)
+        # return .active_seq_list, terminated_seq_list
 
-            seq_frame_id = dynfil.sequence[dynfil.sequence_key_frame_id]
-            seq_bbox = dynfil.sequence[dynfil.sequence_key_bbox]
+    def _save_active_sequence(self, frame_id: int, active_seq_list: list[Sequence]):
+        for ix, sequence in enumerate(active_seq_list):
+            assert isinstance(sequence, Sequence)
+
+            seq_frame_id = sequence.__datad[sequence.key_frame_id]
+            # seq_bbox = sequence.datad[sequence.key_bbox]
+            seq_inference_id = sequence.get_inference_id_list()
+            seq_bbox = []
+            for infer_id in seq_inference_id:
+                infer = Inference()
+                infer.load_from_database(inference_id=infer_id)
+                seq_bbox.append(infer.bbox)
 
             frame_id_str = str(frame_id).zfill(6)
             seq_str = str(ix).zfill(6)
             seq_path = (
                 self.output_dir / f"frame_id_{frame_id_str}_active_seq_{seq_str}.png"
             )
-            self.imgptr.draw_crop_list(
+            self.img_ptr.draw_crop_list(
                 bbox_list=seq_bbox,
                 frame_id_list=seq_frame_id,
                 image_path=seq_path,
             )
 
-    def save_terminated_sequence(self, frame_id: int, terminated_seq_list: list):
-        for ix, dynfil in enumerate(terminated_seq_list):
-            assert isinstance(dynfil, DynamicFilter)
+    def _save_terminated_sequence(
+        self, frame_id: int, terminated_seq_list: list[Sequence]
+    ):
+        for ix, sequence in enumerate(terminated_seq_list):
+            assert isinstance(sequence, Sequence)
 
-            seq_frame_id = dynfil.sequence[dynfil.sequence_key_frame_id]
-            seq_bbox = dynfil.sequence[dynfil.sequence_key_bbox]
+            seq_frame_id = sequence.__datad[sequence.key_frame_id]
+            # seq_bbox = sequence.datad[sequence.key_bbox]
+            seq_inference_id = sequence.get_inference_id_list()
+            seq_bbox = []
+            for infer_id in seq_inference_id:
+                infer = Inference()
+                infer.load_from_database(inference_id=infer_id)
+                seq_bbox.append(infer.bbox)
 
             frame_id_str = str(frame_id).zfill(6)
             seq_str = str(ix).zfill(6)
@@ -142,7 +166,7 @@ class SequenceFinder:
                 self.output_dir
                 / f"frame_id_{frame_id_str}_terminated_seq_{seq_str}.png"
             )
-            self.imgptr.draw_crop_list(
+            self.img_ptr.draw_crop_list(
                 bbox_list=seq_bbox,
                 frame_id_list=seq_frame_id,
                 image_path=seq_path,
