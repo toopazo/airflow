@@ -124,7 +124,7 @@ Face recognition is a ***classification problem***. However, here we borrow a to
 
 For the specified sequences the result is seen in the image below. 
 
-![image](docs/cluster_eval.png)
+![image](docs/cluster_eval_seqs.png)
 
 As we can see the clustering is almost reasonable. If this were not the case, then we would need to evaluate all the steps before in order to ***enforce*** a proper cluster separation.
 
