@@ -94,6 +94,44 @@ The ```sequence``` directory holds the sequence of recognized faces at each fram
 
 ![image](docs/frame_id_000049_active_seq_000002.png)
 
+### Evaluate the quality of the sequences
+
+From a mathematical point of view, every face was projected into a high dimensional point. We need to make sure that the quality of the stored vectors allows to recognize the person once we see him/her again. 
+
+In order to do this we run
+```bash
+python -m  airflow.face_reider.sequence_cluster_eval \ 
+"output/inauguracion_metro_santiago"
+```
+
+After running this command a few images should appear in the output directory. 
+
+File ```sequence_cluster_eval.py``` assumes that the sequences we are looking for, come from frame ```49```. These are:
+```Python
+useqs = [
+        "frame_id_000049_active_seq_000000",
+        "frame_id_000049_active_seq_000001",
+        "frame_id_000049_active_seq_000002",
+    ]
+```
+The insertion of this particular frame into the database was hardcoded in file ```find_sequences.py``` and can be changed as needed.
+
+But regardless of were we got the sequences from. The quality of the sequence depends on how close together are the vectors in the sequence, and how apart are the vectors from other vectors belonging to all the other sequences. 
+
+The assumptions is that if we ever get to see similar vectors in the future. Then, that very likely means that the same person showed up again. 
+
+Face recognition is a ***classification problem***. However, here we borrow a tool from a ***clustering problem*** called [Silhouette](https://en.wikipedia.org/wiki/Silhouette_(clustering)). This measurement is analogous to the [Pearson correlation coefficient](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient) in the sense that a value of +1 indicates a perfect concentration of vectors around a single point and a non-zero distance to the nearest sequence (to its vectors). A value of 0 means that the average distance between the sequence and the nearest neighboring sequence is the same (equal). This is bad because we can not differentiate to what sequence it belongs. Finally a value of -1 means that the vector was classified in the wrong sequence, as it is closer to another sequence. A clustering with an average silhouette width of over 0.7 is considered to be strong, a value over 0.5 reasonable and a value over 0.25 is considered weak.
+
+For the specified sequences the result is seen in the image below. 
+
+![image](docs/cluster_eval.png)
+
+As we can see the clustering is almost reasonable. If this were not the case, then we would need to evaluate all the steps before in order to ***enforce*** a proper cluster separation.
+
+### Compare and recognize face sequences
+
+This is the last step in the process. I am a few commits from getting this. Hold on for now.
+
 
 ## Docker compose
 ### Using ZDG (work in progress)

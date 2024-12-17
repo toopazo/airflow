@@ -127,7 +127,7 @@ class SklSilhouette:
             s=30,
             lw=0,
             alpha=0.7,
-            c=colors,
+            color=colors,
             edgecolor="k",
         )
 
@@ -138,7 +138,7 @@ class SklSilhouette:
             centers[:, 0],
             centers[:, 1],
             marker="o",
-            c="white",
+            color="white",
             alpha=1,
             s=200,
             edgecolor="k",
@@ -244,7 +244,7 @@ class SklSilhouette:
             s=30,
             lw=0,
             alpha=0.7,
-            c=colors,
+            color=colors,
             edgecolor="k",
         )
 
@@ -256,7 +256,7 @@ class SklSilhouette:
             centers[:, 0],
             centers[:, 1],
             marker="o",
-            c="white",
+            color="white",
             alpha=1,
             s=200,
             edgecolor="k",
@@ -331,9 +331,7 @@ class SklNN:
     #     # neigh.kneighbors([[0, 0, 1.3]], 2, return_distance=False)
     #     return neigh, neigh_samples, neigh_index
 
-    def nearest_neighbors(
-        self, q_vector: np.ndarray, barycenters: np.ndarray
-    ):
+    def nearest_neighbors(self, q_vector: np.ndarray, barycenters: np.ndarray):
         nn_indexes, nn_vectors, nn_distances, nn_labels = self.run_fit(
             q_vector=q_vector
         )
@@ -402,7 +400,7 @@ class SklNN:
                 s=30 * 5,
                 lw=0,
                 alpha=0.7,
-                c=cl,
+                color=cl,
                 edgecolor="k",
             )
 
@@ -428,7 +426,7 @@ class SklNN:
         # ax1.scatter(
         #     vectors_2d[:, 0],
         #     vectors_2d[:, 1],
-        #     c="blue",
+        #     color="blue",
         #     edgecolor="k",
         #     alpha=0.7,
         # )
@@ -449,7 +447,7 @@ class SklNN:
                 s=30 * 5,
                 lw=0,
                 alpha=0.7,
-                c=cl,
+                color=cl,
                 edgecolor="k",
             )
 
