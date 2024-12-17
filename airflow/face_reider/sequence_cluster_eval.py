@@ -4,13 +4,16 @@ en el espacio vectorial de embeddings
 """
 
 import os
+import sys
 from copy import deepcopy
 from pathlib import Path
 from pprint import pprint
 import numpy as np
+from collections import Counter
+
 from airflow.database.table_sequence import Sequence
 from airflow.database.table_inference import Inference
-from airflow.face_reider.sequence_cluster_sciikit import Silhouette, KnnExtended
+from airflow.face_reider.sequence_cluster_sciikit import Silhouette, SklearnNN
 
 
 class SequenceCluster:
@@ -25,41 +28,68 @@ class SequenceCluster:
             # print(data)
             self.clusters[name] = sequence
 
-    def scikit_learn_eval(
-        self,
-        clu_name_list: list,
-        clu_barycenter_list: list,
-        clu_vectors_list: list,
-        output_dir: Path,
-    ):
+    def get_cluster_data_list(self):
+        clu_name_list = []
+        clu_barycenter_list = []
+        clu_vectors_list = []
+        for k, v in self.clusters.items():
+            clu_name = k  # k.replace("frame_id_000049_active_", "")
+            sequence = v
+            assert isinstance(sequence, Sequence)
+            inferid_list = sequence.get_inference_id_list()
+
+            vector_list = []
+            for infer_id in inferid_list:
+                infer = Inference()
+                infer.load_from_database(inference_id=infer_id)
+                vector_list.append(infer.embedding)
+            clu_vectors = np.array(vector_list)
+
+            clu_barycenter = self.estimate_cluster_barycenter(clu_vectors)
+
+            clu_name_list.append(clu_name)
+            clu_barycenter_list.append(deepcopy(clu_barycenter))
+            clu_vectors_list.append(deepcopy(clu_vectors))
+
+        return clu_name_list, clu_barycenter_list, clu_vectors_list
+
+    def get_cluster_data_npy(
+        self, clu_name_list: list, clu_barycenter_list: list, clu_vectors_list: list
+    ) -> tuple:
         vect_list = []
-        indx_list = []
+        label_list = []
         prev_name = ""
         label = -1
 
-        for j, vectors in enumerate(clu_vectors_list):
-            name = clu_name_list[j]
+        for clu_j, clu_vectors in enumerate(clu_vectors_list):
+            name = clu_name_list[clu_j]
             if prev_name != name:
                 label = label + 1
                 prev_name = name
 
-            shape0 = vectors.shape
+            shape0 = clu_vectors.shape
             sdim = shape0[0]
             # vdim = shape0[1]
 
             for i in range(0, sdim):
-                vector_i = vectors[i, :]
+                vector_i = clu_vectors[i, :]
                 vect_list.append(deepcopy(vector_i))
-                indx_list.append(label)
+                label_list.append(label)
 
-        vector_data = np.array(vect_list)
-        label_list = np.array(indx_list)
+        vectors = np.array(vect_list)
+        labels = np.array(label_list)
         barycenters = np.array(clu_barycenter_list)
         # barycenters = clu_barycenter_list
 
-        print(f"vector_data.shape {vector_data.shape}")
-        print(f"label_list {label_list} len {len(label_list)}")
-        print(f"barycenters.shape {barycenters.shape}")
+        return labels, barycenters, vectors
+
+    def skl_eval(
+        self,
+        labels: np.ndarray,
+        barycenters: np.ndarray,
+        vectors: np.ndarray,
+        output_dir: Path,
+    ):
 
         # ce = clusteval()
         # results = ce.fit(vector_data)
@@ -71,28 +101,69 @@ class SequenceCluster:
         # ce.scatter()
         # ce.dendrogram()
 
-        clu_sil = Silhouette(vectors=vector_data)
-        clu_sil.fit_and_eval(
-            n_clusters=3, output_path=output_dir / "cluster_fit_and_eval.png"
-        )
-        clu_sil.eval(
-            n_clusters=3,
-            cluster_labels=label_list,
-            barycenters=barycenters,
-            output_path=output_dir / "cluster_eval.png",
-        )
+        clu_sil = Silhouette(labels, barycenters, vectors)
+        # clu_sil.fit_and_eval(
+        #     n_clusters=3, output_path=output_dir / "cluster_fit_and_eval.png"
+        # )
+        clu_sil.eval(output_path=output_dir / "cluster_eval.png")
 
     def evaluate(self, output_dir: Path):
 
-        clu_name_list, clu_barycenter_list, clu_vectors_list = self.get_cluster_data()
-
-        self.scikit_learn_eval(
-            clu_name_list, clu_barycenter_list, clu_vectors_list, output_dir
+        clu_name_list, clu_barycenter_list, clu_vectors_list = (
+            self.get_cluster_data_list()
         )
-
-        # knn_ext = KnnExtended(clu_name_list, clu_barycenter_list, clu_vectors_list)
+        print(f"  clu_name_list len         {len(clu_name_list)}")
+        print(f"  clu_barycenter_list len   {len(clu_barycenter_list)}")
+        print(f"  clu_vectors_list len      {len(clu_vectors_list)}")
 
         # self.custom_evaluation(clu_name_list, clu_barycenter_list, clu_vectors_list)
+
+        labels, barycenters, vectors = self.get_cluster_data_npy(
+            clu_name_list, clu_barycenter_list, clu_vectors_list
+        )
+        print(f"  labels              {labels}")
+        print(f"  labels shape        {labels.shape}")
+        print(f"  labels set          {set(labels)}")
+        print(f"  labels count        {Counter(labels)}")
+        print(f"  barycenters shape   {barycenters.shape}")
+        print(f"  vectors shape       {vectors.shape}")
+
+        self.skl_eval(labels, barycenters, vectors, output_dir)
+
+        skl_nn = SklearnNN(labels, barycenters, vectors)
+
+        # np.argwhere(clu_name_list==)
+        for ix in range(0, len(labels), 5):
+            # ix = 0
+            print(ix)
+            q_vector = skl_nn.vectors[ix]
+            q_label = skl_nn.labels[ix]
+            self.nearest_neighbors(skl_nn, q_vector, q_label, barycenters)
+
+        skl_nn.tsne(output_path=output_dir / "cluster_tsne.png")
+        skl_nn.pca(output_path=output_dir / "cluster_pca.png")
+
+    def nearest_neighbors(
+        self,
+        skl_nn: SklearnNN,
+        q_vector: np.ndarray,
+        q_label: int,
+        barycenters: np.ndarray,
+    ):
+        nn_indexes, nn_vectors, nn_distances, nn_labels = skl_nn.run_fit(
+            q_vector=q_vector, q_label=q_label
+        )
+        nn_distances_round = [round(float(e), 8) for e in nn_distances]
+
+        print("nearest_neighbors")
+        print(f"  nn_indexes            {[int(e) for e in nn_indexes]}")
+        print(f"  nn_vectors shape      {nn_vectors.shape}")
+        print(f"  nn_distances          {nn_distances_round}")
+        print(f"  nn_labels             {[int(e) for e in nn_labels]}")
+
+        for clu_i, bary in enumerate(barycenters):
+            dist_to_bary = np.linalg.norm(q_vector - bary)
+            print(f"  dist to barycenter {clu_i}  {round(dist_to_bary, 4)}")
 
     def custom_evaluation(
         self, clu_name_list: list, clu_barycenter_list: list, clu_vectors_list: list
@@ -261,32 +332,6 @@ class SequenceCluster:
             )
         return cluster_data
 
-    def get_cluster_data(self):
-        clu_name_list = []
-        clu_barycenter_list = []
-        clu_vectors_list = []
-        for k, v in self.clusters.items():
-            clu_name = k.replace("frame_id_000049_active_", "")
-            sequence = v
-            assert isinstance(sequence, Sequence)
-            inferid_list = sequence.get_inference_id_list()
-
-            vector_list = []
-            for infer_id in inferid_list:
-                infer = Inference()
-                infer.load_from_database(inference_id=infer_id)
-                vector_list.append(infer.embedding)
-            clu_vectors = np.array(vector_list)
-            # vector_matrix = vector_matrix[:, 0:10]
-
-            clu_barycenter = self.estimate_cluster_barycenter(clu_vectors)
-
-            clu_name_list.append(clu_name)
-            clu_barycenter_list.append(deepcopy(clu_barycenter))
-            clu_vectors_list.append(deepcopy(clu_vectors))
-
-        return clu_name_list, clu_barycenter_list, clu_vectors_list
-
     def inter_cluster_calculations(
         self, barycenter: np.ndarray, barycenter_list: list, cluster_list: list
     ):
@@ -391,6 +436,8 @@ class SequenceCluster:
 
 
 if __name__ == "__main__":
+    u_output_dir = Path(sys.argv[1])
+
     useqs = [
         "frame_id_000049_active_seq_000000",
         "frame_id_000049_active_seq_000001",
@@ -398,16 +445,10 @@ if __name__ == "__main__":
     ]
 
     seq_clu = SequenceCluster(seq_names=useqs)
-    for useq in useqs:
-        print(useq)
-        print(seq_clu.clusters[useq].print_info())
-        # if useq == "frame_id_000049_active_seq_000000":
-        #     seq_clu.clusters[useq].drop_data(0, 10)
-        #     seq_clu.clusters[useq].drop_data(-10, -0)
-        #     print(seq_clu.clusters[useq].print_info())
+    # for useq in useqs:
+    #     print(useq)
+    #     print(seq_clu.clusters[useq].print_info())
 
-    user = os.environ["USER"]
-    u_output_dir = Path(
-        f"/home/{user}/repos_git/airflow/output/inauguracion_metro_santiago"
-    )
     seq_clu.evaluate(u_output_dir)
+
+    # python -m  airflow.face_reider.sequence_cluster_eval "/home/${USER}/repos_git/airflow/output/inauguracion_metro_santiago"

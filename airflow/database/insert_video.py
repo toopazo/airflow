@@ -239,7 +239,6 @@ class ProcessData:
 
 
 if __name__ == "__main__":
-
     u_videos_path = Path(sys.argv[1]).absolute()
     u_data_dir = Path(sys.argv[2]).absolute()
 

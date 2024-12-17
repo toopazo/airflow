@@ -111,13 +111,18 @@ class SequenceFinder:
                 self._save_active_sequence(frame_id, active_seq_list)
                 self._save_terminated_sequence(frame_id, terminated_seq_list)
 
-            # if frame_id == 49:
-            #     for ix, sequence in enumerate(active_seq_list):
-            #         assert isinstance(sequence, Sequence)
-            #         frame_id_str = str(frame_id).zfill(6)
-            #         seq_str = str(ix).zfill(6)
-            #         seq_name = f"frame_id_{frame_id_str}_active_seq_{seq_str}"
-            #         sequence.insert_into_database(sequence_name=seq_name)
+            if frame_id == 49:
+                print()
+                print(
+                    f"frame_id {frame_id}: The sequences in this frame will be inserted into the db"
+                )
+                print()
+                for ix, sequence in enumerate(active_seq_list):
+                    assert isinstance(sequence, Sequence)
+                    frame_id_str = str(frame_id).zfill(6)
+                    seq_str = str(ix).zfill(6)
+                    seq_name = f"frame_id_{frame_id_str}_active_seq_{seq_str}"
+                    sequence.insert_into_database(sequence_name=seq_name)
 
         # return .active_seq_list, terminated_seq_list
 
@@ -176,8 +181,12 @@ class SequenceFinder:
 if __name__ == "__main__":
     v1_id = int(sys.argv[1])
     v1_output_dir = Path(sys.argv[2]).absolute()
+
     print(f"User input video_id      {v1_id}")
     print(f"User input output_dir    {v1_output_dir}")
+
+    assert v1_output_dir.is_dir()
+
     v1_seq_fin = SequenceFinder(video_id=1, output_dir=v1_output_dir)
     v1_seq_fin.find_sequences()
     # v1_handler.show_sequence()

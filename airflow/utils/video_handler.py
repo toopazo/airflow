@@ -253,6 +253,6 @@ class VideoHandler:
         return infer_dict
 
 
-if __name__ == "__main__":
-    v1_handler = VideoHandler(1)
-    inferd = v1_handler.get_data_inferences(frame_i=1, frame_j=150)
+# if __name__ == "__main__":
+#     v1_handler = VideoHandler(1)
+#     inferd = v1_handler.get_data_inferences(frame_i=1, frame_j=150)

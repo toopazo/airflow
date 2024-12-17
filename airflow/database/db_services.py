@@ -98,7 +98,7 @@ def insert_data_video(connection, row_list: list):
 
 def get_id_video_by_row(connection, row_list: list):
     with connection.cursor() as cursor:
-        row_list = []
+        res_list = []
         for row in row_list:
             query = (
                 f"SELECT id FROM video WHERE name = '{row[0]}' AND path = '{row[1]}';"
@@ -109,8 +109,8 @@ def get_id_video_by_row(connection, row_list: list):
             # [(1,)]
             if len(res) > 0:
                 res = int(res[0][0])
-                row_list.append(res)
-    return row_list
+                res_list.append(res)
+    return res_list
 
 
 def insert_data_frame(connection, row_list: list):
