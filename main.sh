@@ -14,10 +14,10 @@ export NO_ALBUMENTATIONS_UPDATE=1
 #     "output/inauguracion_metro_santiago"
 
 # face_sequencer
-# python -m airflow.face_sequencer.find_sequences 1 output
+python -m airflow.face_sequencer.find_sequences 2 output
 
 # face_reider
 # python -m  airflow.face_reider.sequence_cluster_eval "output/inauguracion_metro_santiago"
 
 # face_reider
-python -m  airflow.face_reider.sequence_cluster_reid output
+# python -m  airflow.face_reider.sequence_cluster_reid output

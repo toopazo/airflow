@@ -28,16 +28,14 @@ class SequenceFinder:
     #     imgptr = ImagePainter(self.video_id)
     #     imgptr.show_frames(frame_i=1, frame_j=100)
 
-    def find_sequences(self):
-        frame_i = 1
-        frame_j = 100
+    def find_sequences(self, frame_i: int, frame_j: int, save: bool):
         infer_dict = self.vid_han.get_data_inferences(frame_i=frame_i, frame_j=frame_j)
 
         # imgptr = ImagePainter(self.video_id)
         # image_list = imgptr.auto_draw_annotations(frame_i=frame_i, frame_j=frame_j)
 
         geom_infer_dict = self.filter_by_geometry(infer_dict=infer_dict)
-        self.filter_by_dynamics(infer_dict=geom_infer_dict, save=False)
+        self.filter_by_dynamics(infer_dict=geom_infer_dict, save=save)
 
     def filter_by_geometry(self, infer_dict: dict):
         """
@@ -111,18 +109,18 @@ class SequenceFinder:
                 self._save_active_sequence(frame_id, active_seq_list)
                 self._save_terminated_sequence(frame_id, terminated_seq_list)
 
-            if frame_id == 49:
-                print()
-                print(
-                    f"frame_id {frame_id}: The sequences in this frame will be inserted into the db"
-                )
-                print()
-                for ix, sequence in enumerate(active_seq_list):
-                    assert isinstance(sequence, Sequence)
-                    frame_id_str = str(frame_id).zfill(6)
-                    seq_str = str(ix).zfill(6)
-                    seq_name = f"frame_id_{frame_id_str}_active_seq_{seq_str}"
-                    sequence.insert_into_database(sequence_name=seq_name)
+            # if frame_id == 49:
+            #     print()
+            #     print(
+            #         f"frame_id {frame_id}: The sequences in this frame will be inserted into the db"
+            #     )
+            #     print()
+            #     for ix, sequence in enumerate(active_seq_list):
+            #         assert isinstance(sequence, Sequence)
+            #         frame_id_str = str(frame_id).zfill(6)
+            #         seq_str = str(ix).zfill(6)
+            #         seq_name = f"frame_id_{frame_id_str}_active_seq_{seq_str}"
+            #         sequence.insert_into_database(sequence_name=seq_name)
 
         # return .active_seq_list, terminated_seq_list
 
@@ -130,9 +128,11 @@ class SequenceFinder:
         for ix, sequence in enumerate(active_seq_list):
             assert isinstance(sequence, Sequence)
 
-            seq_frame_id = sequence.__datad[sequence.key_frame_id]
+            # seq_frame_id = sequence.__datad[sequence.key_frame_id]
+            seq_frame_id = sequence.get_frame_id_list()
             # seq_bbox = sequence.datad[sequence.key_bbox]
             seq_inference_id = sequence.get_inference_id_list()
+
             seq_bbox = []
             for infer_id in seq_inference_id:
                 infer = Inference()
@@ -156,9 +156,11 @@ class SequenceFinder:
         for ix, sequence in enumerate(terminated_seq_list):
             assert isinstance(sequence, Sequence)
 
-            seq_frame_id = sequence.__datad[sequence.key_frame_id]
+            # seq_frame_id = sequence.__datad[sequence.key_frame_id]
+            seq_frame_id = sequence.get_frame_id_list()
             # seq_bbox = sequence.datad[sequence.key_bbox]
             seq_inference_id = sequence.get_inference_id_list()
+
             seq_bbox = []
             for infer_id in seq_inference_id:
                 infer = Inference()
@@ -187,6 +189,8 @@ if __name__ == "__main__":
 
     assert v1_output_dir.is_dir()
 
-    v1_seq_fin = SequenceFinder(video_id=1, output_dir=v1_output_dir)
-    v1_seq_fin.find_sequences()
+    v1_seq_fin = SequenceFinder(video_id=v1_id, output_dir=v1_output_dir)
+    # v1_seq_fin.find_sequences(frame_i=1, frame_j=100,save=False)
+    v1_seq_fin.find_sequences(frame_i=250, frame_j=321, save=True)
+    # v1_seq_fin.find_sequences(frame_i=250, frame_j=500, save=True)
     # v1_handler.show_sequence()

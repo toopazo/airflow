@@ -46,6 +46,10 @@ class DynamicFilter:
             distance = np.linalg.norm(infer_center - previous_center)
             dist_list.append(distance)
 
+        if len(dist_list) == 0:
+            current_infer = Inference()
+            return current_infer, False
+
         arg_min_dist = np.argmin(dist_list).squeeze()
         if self.verbose:
             print(f"arg_min_dist {arg_min_dist} in dist_list {dist_list}")
