@@ -47,5 +47,3 @@ class DbOps:
 if __name__ == "__main__":
     do = DbOps()
     do.create_tables()
-
-    # python -m airflow.database.db_create

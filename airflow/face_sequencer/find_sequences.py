@@ -190,5 +190,3 @@ if __name__ == "__main__":
     v1_seq_fin = SequenceFinder(video_id=1, output_dir=v1_output_dir)
     v1_seq_fin.find_sequences()
     # v1_handler.show_sequence()
-
-    # python -m airflow.face_sequencer.find_sequences 1 /home/${USER}/repos_git/airflow/output

@@ -250,7 +250,3 @@ if __name__ == "__main__":
 
     do = ProcessData()
     do.add_video_data_to_database(video_path=u_videos_path, data_dir=u_data_dir)
-
-    # python -m airflow.database.insert_video \
-    #     "/home/${USER}/repos_git/airflow/videos/inauguracion_metro_santiago.mp4" \
-    #     "/home/${USER}/repos_git/airflow/output/inauguracion_metro_santiago"

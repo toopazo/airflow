@@ -286,3 +286,22 @@ def get_data_sequence_by_name(connection, row_list: list):
             #     id_list.append(res)
             id_list.append(res)
     return id_list
+
+
+def get_available_sequence(connection, row_list: list):
+    with connection.cursor() as cursor:
+        res_list = []
+        for row in row_list:
+            query = """
+                SELECT DISTINCT name
+                FROM sequence;
+            """
+            cursor.execute(query, row)
+            res = cursor.fetchall()
+            # print(res)
+            # [(1,)]
+            # if len(res) > 0:
+            #     res = int(res[0][0])
+            #     id_list.append(res)
+            res_list.append(res)
+    return res_list

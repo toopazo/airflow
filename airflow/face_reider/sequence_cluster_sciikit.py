@@ -26,7 +26,11 @@ from sklearn.decomposition import PCA
 
 class SklSilhouette:
     def __init__(
-        self, labels: np.ndarray, barycenters: np.ndarray, vectors: np.ndarray
+        self,
+        names: np.ndarray,
+        labels: np.ndarray,
+        barycenters: np.ndarray,
+        vectors: np.ndarray,
     ):
         # Generating the sample data from make_blobs
         # This particular setting has one distinct cluster and 3 clusters placed close
@@ -41,6 +45,7 @@ class SklSilhouette:
         #     random_state=1,
         # )  # For reproducibility
 
+        self.names: np.ndarray = names
         self.labels: np.ndarray = labels
         self.barycenters: np.ndarray = barycenters
         self.vectors: np.ndarray = vectors
@@ -50,9 +55,19 @@ class SklSilhouette:
         shape0 = self.vectors.shape
         self.n_samples = shape0[0]
         self.n_features = shape0[1]
-        print(f"Num of vectors {self.n_samples} Num of features {self.n_features}")
 
-    def eval(self, output_path: Path):
+    def calculate_silhouette(self) -> tuple:
+        # The silhouette_score gives the average value for all the samples.
+        # This gives a perspective into the density and separation of the formed
+        # clusters
+        silhouette_avg = silhouette_score(self.vectors, self.labels)
+
+        # Compute the silhouette scores for each sample
+        sample_silhouette_values = silhouette_samples(self.vectors, self.labels)
+
+        return sample_silhouette_values, silhouette_avg
+
+    def calc_plot(self, output_path: Path):
 
         # Create a subplot with 1 row and 2 columns
         fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -67,19 +82,13 @@ class SklSilhouette:
         # plots of individual clusters, to demarcate them clearly.
         ax1.set_ylim([0, len(self.vectors) + (self.n_clusters + 1) * 10])
 
-        # The silhouette_score gives the average value for all the samples.
-        # This gives a perspective into the density and separation of the formed
-        # clusters
-        silhouette_avg = silhouette_score(self.vectors, self.labels)
+        sample_silhouette_values, silhouette_avg = self.calculate_silhouette()
         print(
             "For n_clusters =",
             self.n_clusters,
             "The average silhouette_score is :",
             silhouette_avg,
         )
-
-        # Compute the silhouette scores for each sample
-        sample_silhouette_values = silhouette_samples(self.vectors, self.labels)
 
         y_lower = 10
         for i in range(self.n_clusters):
@@ -162,7 +171,7 @@ class SklSilhouette:
 
         return sample_silhouette_values
 
-    def fit_and_eval(self, n_clusters: int, output_path: Path):
+    def calc_fit_plot(self, n_clusters: int, output_path: Path):
 
         # Create a subplot with 1 row and 2 columns
         fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -281,9 +290,13 @@ class SklSilhouette:
         fig.savefig(output_path)
 
 
-class SklNN:
+class SklNearestNeighbors:
     def __init__(
-        self, labels: np.ndarray, barycenters: np.ndarray, vectors: np.ndarray
+        self,
+        names: np.ndarray,
+        labels: np.ndarray,
+        barycenters: np.ndarray,
+        vectors: np.ndarray,
     ):
 
         # samples = [[0, 0, 2], [1, 0, 0], [0, 0, 1]]
@@ -299,10 +312,12 @@ class SklNN:
         #         neigh_samples.append(deepcopy(vector_i))
         #         neigh_names.append(cluster_name)
 
-        neigh = NearestNeighbors(n_neighbors=5, algorithm="brute")
+        self.n_neighbors = 5
+        neigh = NearestNeighbors(n_neighbors=self.n_neighbors, algorithm="brute")
         neigh.fit(vectors)
 
         self.sklearn_nn = neigh
+        self.names = names
         self.labels = labels
         self.barycenters = barycenters
         self.vectors = vectors  # neigh_samples

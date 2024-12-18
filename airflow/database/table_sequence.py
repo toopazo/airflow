@@ -1,7 +1,11 @@
 from copy import deepcopy
 
 from airflow.database.db_config import connect_and_execute
-from airflow.database.db_services import insert_data_sequence, get_data_sequence_by_name
+from airflow.database.db_services import (
+    insert_data_sequence,
+    get_data_sequence_by_name,
+    get_available_sequence,
+)
 from airflow.database.table_inference import Inference
 
 
@@ -66,6 +70,19 @@ class Sequence:
         lk2 = len(self.__datad[self.key_frame_id])
         lk3 = len(self.__datad[self.key_inference_id])
         assert lk1 == lk2 == lk3
+
+    def get_database_sequences(self) -> list[str]:
+        row_name = []
+        data_list = connect_and_execute(
+            service_fnct=get_available_sequence,
+            row_list=[row_name],
+        )
+        data = data_list[0]
+
+        data = [e[0] for e in data]
+        # print(data)
+        # print(f"  There are {len(data)} available sequences")
+        return data
 
     def get_inference_id_list(self):
         return self.__datad[self.key_inference_id]

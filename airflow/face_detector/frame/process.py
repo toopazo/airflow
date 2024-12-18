@@ -42,9 +42,10 @@ class ProcessFrame:
         img = self.pil_to_cv2(image)
         faces = self.app.get(img)
         # faces[0] keys dict_keys(['bbox', 'kps', 'det_score', 'landmark_3d_68', 'pose', 'landmark_2d_106', 'gender', 'age', 'embedding'])
-        print(f"faces {type(faces)}")
-        print(f"faces[0] type {type(faces[0])}")
-        print(f"faces[0] keys {faces[0].keys()}")
+        if len(faces) > 0:
+            print(f"faces {type(faces)}")
+            print(f"faces[0] type {type(faces[0])}")
+            print(f"faces[0] keys {faces[0].keys()}")
         return faces
 
     def inference_cv2(self, img: np.ndarray):

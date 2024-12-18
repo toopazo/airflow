@@ -1,10 +1,10 @@
 # airflow
 
-Airflow is a pet project showing my work on **Face Recognition from video**. This repo holds the code, installation and instructions. The idea behind this project is explained [in this article](https://toopazo.github.io/face-recognition-challenge/) (in Spanish) of [my website](https://toopazo.github.io).
+Airflow is a pet project showing my work on **Face Recognition from video**. This repo holds the code, installation and instructions. The idea behind this project is explained [in this article](https://toopazo.github.io/face-recognition-challenge/) (in Spanish). In [my website](https://toopazo.github.io) I have similar articles about technology, control of dynamical systems, math, AI, and philosophy.
 
 ## What am I trying to do?
 
-There are many similar projects, some of them are paid other are not. Here are some results after searching for "face recognition from video". 
+There are many similar projects, some of them are paid others are not. Here are some results after searching for "face recognition from video". 
 - https://www.youtube.com/watch?v=FavHtxgP4l4
 - https://www.corsight.ai/
 - https://www.sentiveillance.com/face-algorithm/
@@ -68,14 +68,15 @@ Let us process the videos in ```videos/```. To do this, just execute
 
 ```bash
 python -m airflow.face_detector.process_video \
-  videos output
+      videos/inauguracion_metro_santiago.mp4 \
+      output
 ```
 
 Next, insert the result of a particular video (e.g ```inauguracion_metro_santiago.mp4```) to the database using
 ```bash
 python -m airflow.database.insert_video \
-  "videos/inauguracion_metro_santiago.mp4" \
-  "output/inauguracion_metro_santiago"
+  videos/inauguracion_metro_santiago.mp4 \
+  output/inauguracion_metro_santiago
 ```
 
 ### Find the face sequences in the processed video
