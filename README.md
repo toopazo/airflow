@@ -154,6 +154,7 @@ python -m  airflow.face_reider.sequence_cluster_reid output
 
 At first, all face sequences are assumed to be distinct face clusters. The resulting internal evaluation is shown below.
 ![image](docs/sequence_cluster_silhouette_seq_clu.png)
+
 There are 15 face sequence taken from the original video,
 
 The face sequences can be seen in the image below. 
