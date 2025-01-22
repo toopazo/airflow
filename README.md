@@ -79,7 +79,7 @@ python -m airflow.database.insert_video \
   output/inauguracion_metro_santiago
 ```
 
-### Find the face sequences in the processed video
+### Find face sequences in video
 
 Next, we can move to something interesting. Let us detect the first sequences of detected faces. We can do this running
 ```bash
@@ -95,7 +95,7 @@ The ```sequence``` directory holds the sequence of recognized faces at each fram
 
 ![image](docs/frame_id_000049_active_seq_000002.png)
 
-### Evaluate the quality of the sequences
+### Filter found sequences
 
 From a mathematical point of view, every face was projected into a high dimensional point. We need to make sure that the quality of the stored vectors allows to recognize the person once we see him/her again. 
 
@@ -129,9 +129,64 @@ For the specified sequences the result is seen in the image below.
 
 As we can see the clustering is almost reasonable. If this were not the case, then we would need to modify the steps before in order to ***enforce*** a proper cluster separation.
 
-### Compare and recognize face sequences
+### Recognize (merge) face sequences
 
-This is the last step in the process. I am a few commits from getting this. Hold on for now.
+As it was said before, recognizing a known face among an existing database of faces is re-interpreted as comparing clusters of vectors. Two types of clusters are importante: ***face sequences clusters*** and ***face clusters***. Each ***face cluster*** is made up of one or more ***face sequences cluster*** that belong to the same person. On the other hand, each ***face sequence clusters*** is the result of a single sequence (as the name suggests). The merging of a face sequence cluster into a face cluster is interpreted as recognizing a person. 
+
+Thus, instead of comparing an unknown face (one vector) with a known face (also one vector), the comparison is between an unknown face sequence (a sequence of vectors) and a known face cluster (also a sequence of vectors).
+
+In the approach of this work, the problem is NOT a clustering problem. and therefore algorithms like Hierarchical clustering, model-based clustering, K-means, DBSCAN, OPTICS, CLIQUE, and others are not relevant. What we are trying to do is to ***build and maintain*** a well separated cluster. 
+
+By design, every new face sequence will be either added as a new well separated cluster or incorporated into an existing cluster. The ultimate assumption is that a database of well defined clusters enables a better face recognition than image by image methods. 
+
+The idea of a well behaved cluster, or a well separated cluster is vague and needs to be better defined. The [wiki page on cluster analysis](https://en.wikipedia.org/wiki/Cluster_analysis#Internal_evaluation) mentions three established methods of internal evaluation:
+- Davies–Bouldin index
+- Dunn index
+- Silhouette coefficient
+
+The [Silhouette coefficient](https://en.wikipedia.org/wiki/Silhouette_(clustering)) is used in this work to maintain the database of face clusters with values higher than a predefined threshold $s_{min}$. The Silhouette coefficient is often considered somewhat analogous to the [Pearson coefficient of correlation](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient). Both provide a value between -1 and +1. A value closer to +1 indicates strong correlation (strong cluster cohesion). A cluster with an average Silhouette value below 0.25 can not be considered cohesive. This lower limit provides an objective value to evaluate cluster cohesion and is the main advantage of the Silhouette coefficient a metric for internal evaluation. 
+
+In the code, the task of face recognition is called ReId (Re Identify) and is executed using:
+
+```bash
+python -m  airflow.face_reider.sequence_cluster_reid output
+```
+
+At first, all face sequences are assumed to be distinct face clusters. The resulting internal evaluation is shown below.
+![image](docs/sequence_cluster_silhouette_seq_clu.png)
+There are 15 face sequence taken from the original video,
+
+The face sequences can be seen in the image below. 
+![image](docs/seq_clu_gallery_marked.png)
+The two face sequences marked with a yellow cross belong to the same person. Our algorithm recognises this in two steps. 
+
+First. Looking at the Silhouette plot, it can be seen that 4 clusters show good cohesion (silhouette values above 0.55). And others show a bad cohesion, in particular cluster 8 has an average Silhouette coefficient of just 0.26. If one were to take every vector in sequence 8 and check for the distances to every other cluster the result would be the image below. 
+
+![image](docs/cluster_8_seq_clu.png)
+Here, every line represents a particular vector in sequence 8. The closest barycenter (the center point of every cluster) is that of cluster 8 (as it should be, nothing strange here). The second closest barycenter is that of cluster 7. The third closest barycenter is that of cluster 13 and 14 depending on the particular vector in sequence 8 we are tracking. Using this information we can test wether is a good idea, or not, to merge cluster 8 into cluster 7 and re-evaluate the whole database. This is the seconds step. 
+
+Second. The vectors in the face sequence 7 and 8 are merged, and the rest of the face clusters are re-indexed. Thus, the cluster 9 now became cluster 8 and cluster 10 became cluster 9, and so on. The Silhouette coefficient are re-calculated and the result is shown below.
+
+![image](docs/sequence_cluster_silhouette_merged_7_8.png)
+The total number of clusters is now 14 instead of 15. Most importantly, no cluster has an average Silhouette coefficient below 0.25. The recognition of face is clear by looking at the sequences.
+
+![image](docs/reid_face_sequence_7_8.png)
+
+Finally, it is important to notice the although the recognition was successful, the cluster 7 became less cohesive than before. This is clear when comparing Silhouette before and after.
+
+![image](docs/reid_before_after_merged_7_8.png)
+The value before was 0.52 and after it is 0.37. This last value is still above the threshold of 0.25 but significantly less than the original 0.52. 
+
+A smart algorithm should have some sort of loss of memory in order to drop vectors that diminish cluster cohesion as new sequences are merged (recognized). This is not yet implemented, but is being considered for development. 
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
 
 
 ## Docker compose

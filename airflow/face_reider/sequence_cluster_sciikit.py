@@ -67,11 +67,12 @@ class SklSilhouette:
 
         return sample_silhouette_values, silhouette_avg
 
-    def calc_plot(self, output_path: Path):
+    def plot_silhouette(self, output_path: Path):
 
         # Create a subplot with 1 row and 2 columns
-        fig, (ax1, ax2) = plt.subplots(1, 2)
-        fig.set_size_inches(18, 7)
+        # fig, (ax1, ax2) = plt.subplots(1, 2)
+        fig, ax1 = plt.subplots(1, 1)
+        fig.set_size_inches(7, 9)
 
         # The 1st subplot is the silhouette plot
         # The silhouette coefficient can range from -1, 1 but in this example all
@@ -117,8 +118,8 @@ class SklSilhouette:
             # Compute the new y_lower for next plot
             y_lower = y_upper + 10  # 10 for the 0 samples
 
-        ax1.set_title("The silhouette plot for the various clusters.")
-        ax1.set_xlabel("The silhouette coefficient values")
+        # ax1.set_title("The silhouette plot for the various clusters.")
+        ax1.set_xlabel("Silhouette coefficient")
         ax1.set_ylabel("Cluster label")
 
         # The vertical line for average silhouette score of all the values
@@ -127,43 +128,43 @@ class SklSilhouette:
         ax1.set_yticks([])  # Clear the yaxis labels / ticks
         ax1.set_xticks([-0.1, 0, 0.2, 0.4, 0.6, 0.8, 1])
 
-        # 2nd Plot showing the actual clusters formed
-        colors = cm.nipy_spectral(self.labels.astype(float) / self.n_clusters)
-        ax2.scatter(
-            self.vectors[:, 0],
-            self.vectors[:, 1],
-            marker=".",
-            s=30,
-            lw=0,
-            alpha=0.7,
-            color=colors,
-            edgecolor="k",
-        )
+        # # 2nd Plot showing the actual clusters formed
+        # colors = cm.nipy_spectral(self.labels.astype(float) / self.n_clusters)
+        # ax2.scatter(
+        #     self.vectors[:, 0],
+        #     self.vectors[:, 1],
+        #     marker=".",
+        #     s=30,
+        #     lw=0,
+        #     alpha=0.7,
+        #     color=colors,
+        #     edgecolor="k",
+        # )
 
-        # Labeling the clusters
-        centers = self.barycenters
-        # Draw white circles at cluster centers
-        ax2.scatter(
-            centers[:, 0],
-            centers[:, 1],
-            marker="o",
-            color="white",
-            alpha=1,
-            s=200,
-            edgecolor="k",
-        )
+        # # Labeling the clusters
+        # centers = self.barycenters
+        # # Draw white circles at cluster centers
+        # ax2.scatter(
+        #     centers[:, 0],
+        #     centers[:, 1],
+        #     marker="o",
+        #     color="white",
+        #     alpha=1,
+        #     s=200,
+        #     edgecolor="k",
+        # )
 
-        for i, c in enumerate(centers):
-            ax2.scatter(c[0], c[1], marker="$%d$" % i, alpha=1, s=50, edgecolor="k")
+        # for i, c in enumerate(centers):
+        #     ax2.scatter(c[0], c[1], marker="$%d$" % i, alpha=1, s=50, edgecolor="k")
 
-        ax2.set_title("The visualization of the clustered data.")
-        ax2.set_xlabel("Feature space for the 1st feature")
-        ax2.set_ylabel("Feature space for the 2nd feature")
+        # ax2.set_title("The visualization of the clustered data.")
+        # ax2.set_xlabel("Feature space for the 1st feature")
+        # ax2.set_ylabel("Feature space for the 2nd feature")
 
-        plt.suptitle(
+        # plt.suptitle(
+        plt.title(
             f"Silhouette: n_clusters = {self.n_clusters}, silhouette_avg={round(silhouette_avg, 4)}",
             fontsize=14,
-            fontweight="bold",
         )
 
         # plt.show()

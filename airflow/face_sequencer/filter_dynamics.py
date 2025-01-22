@@ -90,29 +90,30 @@ class DynamicFilter:
 
 class SequenceTracker:
     def __init__(self, infer_list: list[Inference]):
-        self.active_filter_list: list[DynamicFilter] = []
+        self.active_dynfil_list: list[DynamicFilter] = []
         self.active_sequence_list: list[Sequence] = []
         for infer in infer_list:
             dyn_fil = DynamicFilter()
             dyn_fil.previous_bbox = deepcopy(infer.bbox)
-            self.active_filter_list.append(dyn_fil)
+            self.active_dynfil_list.append(dyn_fil)
 
             sequence = Sequence()
             sequence.initialize(infer=infer, sequence_id=0)
             self.active_sequence_list.append(sequence)
 
     def print_info(self):
-        print(f"Active sequence list has {len(self.active_filter_list)} elements")
+        print(f"Active sequence list has {len(self.active_dynfil_list)} elements")
 
     def update(self, infer_list: list[Inference]) -> tuple:
         left_overs = [e.inference_id for e in infer_list]
         terminated_seq_ix = []
         terminated_seq_list = []
-        for ix, dyn_fil in enumerate(self.active_filter_list):
+        for ix, dyn_fil in enumerate(self.active_dynfil_list):
             filtered_infer, approved = dyn_fil.apply(infer_list=infer_list)
 
             sequence = self.active_sequence_list[ix]
             seq_inference_id = sequence.get_inference_id_list()
+
             if approved:
                 sequence.append_inference(filtered_infer, sequence_id=0)
 
@@ -132,31 +133,52 @@ class SequenceTracker:
 
         # Handle terminated sequences
         if len(terminated_seq_ix) > 0:
-            print(f"  ----> Handling terminated sequences {terminated_seq_ix}")
-            for rm_ix in terminated_seq_ix:
-                _ = self.active_filter_list.pop(rm_ix)
-                rm_sequence = self.active_sequence_list.pop(rm_ix)
-                rm_seq_inference_id = rm_sequence.get_inference_id_list()
-                print(
-                    f"  ----> Removing sequence terminated at inference_id {rm_seq_inference_id[-1]}"
-                )
+            self.__handle_terminated_sequences(terminated_seq_ix)
 
         # Handle left overs
         if len(left_overs) > 0:
-            # raise RuntimeError
-            print(f"  ----> Handling left_overs {left_overs}")
-            for left_over_id in left_overs:
-                for infer in infer_list:
-                    if infer.inference_id == left_over_id:
-                        print(
-                            f"  ----> A new sequence was started from inference_id {left_over_id}"
-                        )
-                        dyn_fil = DynamicFilter()
-                        dyn_fil.previous_bbox = deepcopy(infer.bbox)
-                        self.active_filter_list.append(dyn_fil)
-
-                        sequence = Sequence()
-                        sequence.initialize(infer=infer, sequence_id=0)
-                        self.active_sequence_list.append(sequence)
+            self.__handle_left_over_sequences(left_overs, infer_list)
 
         return self.active_sequence_list, terminated_seq_list
+
+    def __handle_terminated_sequences(self, terminated_seq_ix: list):
+        """
+        Handle terminated sequences
+        """
+        print(f"  ----> Handling terminated sequences {terminated_seq_ix}")
+        new_active_dynfil_list = []
+        new_active_sequence_list = []
+
+        for ix, dyn_fil in enumerate(self.active_dynfil_list):
+            sequence = self.active_sequence_list[ix]
+
+            if ix in terminated_seq_ix:
+                inference_id = sequence.get_inference_id_list()
+                print(
+                    f"  ----> Removing sequence {ix} terminated at inference_id {inference_id[-1]}"
+                )
+            else:
+                new_active_dynfil_list.append(dyn_fil)
+                new_active_sequence_list.append(sequence)
+
+        self.active_dynfil_list = new_active_dynfil_list
+        self.active_sequence_list = new_active_sequence_list
+
+    def __handle_left_over_sequences(
+        self, left_overs: list[int], infer_list: list[Inference]
+    ):
+        # raise RuntimeError
+        print(f"  ----> Handling left_overs {left_overs}")
+        for left_over_id in left_overs:
+            for infer in infer_list:
+                if infer.inference_id == left_over_id:
+                    print(
+                        f"  ----> A new sequence was started from inference_id {left_over_id}"
+                    )
+                    dyn_fil = DynamicFilter()
+                    dyn_fil.previous_bbox = deepcopy(infer.bbox)
+                    self.active_dynfil_list.append(dyn_fil)
+
+                    sequence = Sequence()
+                    sequence.initialize(infer=infer, sequence_id=0)
+                    self.active_sequence_list.append(sequence)
