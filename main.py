@@ -16,8 +16,7 @@ class MonkeyHandler(BaseHandler):
             response = f"{self.__class__.__name__}: I'll eat the {request[BaseHandler.log_key]}"
             return {BaseHandler.log_key: response}
         else:
-            # return super().get_response(request)
-            return super().early_stop_response()
+            return super().get_response(request)
 
 
 class SquirrelHandler(BaseHandler):
@@ -26,8 +25,7 @@ class SquirrelHandler(BaseHandler):
             response = f"{self.__class__.__name__}: I'll eat the {request[BaseHandler.log_key]}"
             return {BaseHandler.log_key: response}
         else:
-            # return super().get_response(request)
-            return super().early_stop_response()
+            return super().get_response(request)
 
 
 class DogHandler(BaseHandler):
@@ -36,8 +34,7 @@ class DogHandler(BaseHandler):
             response = f"{self.__class__.__name__}: I'll eat the {request[BaseHandler.log_key]}"
             return {BaseHandler.log_key: response}
         else:
-            # return super().get_response(request)
-            return super().early_stop_response()
+            return super().get_response(request)
 
 
 def client_code(handler: Handler) -> None:
@@ -75,5 +72,5 @@ if __name__ == "__main__":
     client_code(monkey)
     print("\n")
 
-    # print("Subchain: Squirrel > Dog")
-    # client_code(squirrel)
+    print("Subchain: Squirrel > Dog")
+    client_code(squirrel)

@@ -130,15 +130,20 @@ class BaseHandler(Handler):
                 # return self.__next_handler.handle(request=nrr.response)
                 next_handle = getattr(self.__next_handler, "handle")
                 return next_handle(nrr.response)
-            else:
-                return nrr
+            return nrr
 
     def get_response(self, request: dict) -> dict:
-        # Add info, then pass it on to the next handler
+        # Early stop response
+        _ = request
+        return self.early_stop_response()
+
+        # Just pass it on to the next handler
         # return request
-        response = deepcopy(request)
-        response[Handler.log_key] = f"Default log from {self.__class__.__name__}"
-        return response
+
+        # Add info, then pass it on to the next handler
+        # response = deepcopy(request)
+        # response[Handler.log_key] = f"Default log from {self.__class__.__name__}"
+        # return response
 
     def early_stop_response(self) -> dict:
         return {
