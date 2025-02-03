@@ -36,18 +36,24 @@ class NameRequestResponse:
             self.response_str = f"Response has no [{BaseHandler.log_key}] key"
 
     def __str__(self) -> str:
-        n_cols = 10
-        m1 = self.name.ljust(int(n_cols * 2))
+        n_cols = 30
+        l1_col2 = self.name  # .ljust(int(n_cols * 2))
 
-        m2a = ", ".join(self.request.keys())
-        m2a = f"[{m2a}]".ljust(int(n_cols))
-        m2b = self.request_str.ljust(int(n_cols * 4))
+        l2_col2 = ", ".join(self.request.keys())
+        l2_col2 = f"[{l2_col2}]"  # .ljust(int(n_cols))
+        l3_col2 = self.request_str  # .ljust(int(n_cols * 4))
 
         m3a = ", ".join(self.response.keys())
-        m3a = f"[{m3a}]".ljust(int(n_cols))
-        m3b = self.response_str.ljust(int(n_cols * 4))
+        m3a = f"[{m3a}]"  # .ljust(int(n_cols))
+        m3b = self.response_str  # .ljust(int(n_cols * 4))
 
-        msg = f"name: {m1} | request keys: {m2a} request[{BaseHandler.log_key}]: {m2b} | response keys: {m3a} response[{BaseHandler.log_key}]: {m3b}"
+        l1_col1 = "name:".ljust(n_cols)
+        l2_col1 = "  request keys:".ljust(n_cols)
+        l3_col1 = f"  request[{BaseHandler.log_key}]:".ljust(n_cols)
+        l4_col1 = "  response keys: ".ljust(n_cols)
+        l5_col1 = f"  response[{BaseHandler.log_key}]:".ljust(n_cols)
+
+        msg = f"{l1_col1}{l1_col2}\n{l2_col1}{l2_col2}\n{l3_col1}{l3_col2}\n{l4_col1}{m3a}\n{l5_col1}{m3b}"
         return msg
 
 

@@ -48,12 +48,13 @@ def client_code(handler: Handler) -> None:
 
     for log_key_request in ["Nut", "Banana", "Cup of coffee"]:
         request = {BaseHandler.log_key: log_key_request}
+        print()
         print(
-            f"\nClient input request[{BaseHandler.log_key}]: {request[BaseHandler.log_key]}?"
+            f"Client input request[{BaseHandler.log_key}]: {request[BaseHandler.log_key]}"
         )
         nrr = handler.handle(request)
         print(
-            f"\nClient output response[{BaseHandler.log_key}]: {nrr.response[BaseHandler.log_key]}?"
+            f"Client output response[{BaseHandler.log_key}]: {nrr.response[BaseHandler.log_key]}"
         )
         # if result:
         #     print(f"  {result}", end="")
