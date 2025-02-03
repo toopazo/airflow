@@ -43,9 +43,9 @@ class NameRequestResponse:
         l2_col2 = f"[{l2_col2}]"  # .ljust(int(n_cols))
         l3_col2 = self.request_str  # .ljust(int(n_cols * 4))
 
-        m3a = ", ".join(self.response.keys())
-        m3a = f"[{m3a}]"  # .ljust(int(n_cols))
-        m3b = self.response_str  # .ljust(int(n_cols * 4))
+        l4_col2 = ", ".join(self.response.keys())
+        l4_col2 = f"[{l4_col2}]"  # .ljust(int(n_cols))
+        l5_col2 = self.response_str  # .ljust(int(n_cols * 4))
 
         l1_col1 = "name:".ljust(n_cols)
         l2_col1 = "  request keys:".ljust(n_cols)
@@ -53,7 +53,17 @@ class NameRequestResponse:
         l4_col1 = "  response keys: ".ljust(n_cols)
         l5_col1 = f"  response[{BaseHandler.log_key}]:".ljust(n_cols)
 
-        msg = f"{l1_col1}{l1_col2}\n{l2_col1}{l2_col2}\n{l3_col1}{l3_col2}\n{l4_col1}{m3a}\n{l5_col1}{m3b}"
+        msg = f"{l1_col1}{l1_col2}\n{l2_col1}{l2_col2}\n{l3_col1}{l3_col2}\n{l4_col1}{l4_col2}\n{l5_col1}{l5_col2}"
+
+        # msg_dict = {
+        #     "name": self.name,
+        #     "request_keys": l2_col2,
+        #     f"request[{BaseHandler.log_key}]": l3_col2,
+        #     "response_keys": l4_col2,
+        #     f"response[{BaseHandler.log_key}]": l5_col2,
+        # }
+        # return str(msg_dict)
+
         return msg
 
 
